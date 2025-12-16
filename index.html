@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Lulabean – Tablet Order</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+      /* Basic reset */
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          sans-serif;
+        background: #f4f7fb;
+        color: #102a43;
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        min-height: 100vh;
+        padding: 24px;
+      }
+
+      .app-shell {
+        max-width: 1024px;
+        width: 100%;
+        background: #ffffff;
+        border-radius: 24px;
+        box-shadow: 0 18px 45px rgba(15, 35, 52, 0.18);
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .app-header {
+        background: linear-gradient(135deg, #0f1f3d, #182a4f);
+        color: #ffffff;
+        padding: 20px 28px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .brand-logo {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: #00b968;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #0f1f3d;
+        font-weight: 800;
+        font-size: 18px;
+      }
+
+      .brand-text-title {
+        font-size: 20px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+      }
+
+      .brand-text-subtitle {
+        font-size: 12px;
+        opacity: 0.7;
+      }
+
+      .header-cta {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 6px;
+        font-size: 12px;
+      }
+
+      .header-pill {
+        background: rgba(0, 185, 104, 0.1);
+        border-radius: 99px;
+        padding: 6px 14px;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 11px;
+      }
+
+      .header-pill-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: #00e08a;
+      }
+
+      .app-body {
+        display: grid;
+        grid-template-columns: 1.3fr 1fr;
+        gap: 0;
+      }
+
+      @media (max-width: 900px) {
+        .app-body {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .panel {
+        padding: 24px 28px 28px;
+      }
+
+      .panel + .panel {
+        border-left: 1px solid #e1e7f0;
+      }
+
+      @media (max-width: 900px) {
+        .panel + .panel {
+          border-left: none;
+          border-top: 1px solid #e1e7f0;
+        }
+      }
+
+      .panel-title {
+        font-size: 18px;
+        font-weight: 700;
+        margin-bottom: 4px;
+      }
+
+      .panel-subtitle {
+        font-size: 13px;
+        color: #6b7b93;
+        margin-bottom: 18px;
+      }
+
+      /* Form controls */
+      .form-group {
+        margin-bottom: 18px;
+      }
+
+      .label {
+        font-size: 13px;
+        font-weight: 600;
+        margin-bottom: 6px;
+        display: block;
+        color: #243b53;
+      }
+
+      select {
+        width: 100%;
+        padding: 12px 14px;
+        border-radius: 10px;
+        border: 1px solid #d5deea;
+        font-size: 15px;
+        background: #f9fbff;
+        outline: none;
+        transition: border-color 0.15s ease, box-shadow 0.15s ease;
+      }
+
+      select:focus {
+        border-color: #00b968;
+        box-shadow: 0 0 0 2px rgba(0, 185, 104, 0.15);
+        background: #ffffff;
+      }
+
+      /* Buttons */
+      .btn-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 4px;
+        margin-bottom: 6px;
+      }
+
+      .btn {
+        border-radius: 999px;
+        border: none;
+        padding: 10px 18px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: transform 0.05s ease, box-shadow 0.1s ease,
+          background-color 0.15s ease, color 0.15s ease;
+      }
+
+      .btn-primary {
+        background: #00b968;
+        color: #0f1f3d;
+        box-shadow: 0 10px 25px rgba(0, 185, 104, 0.35);
+      }
+
+      .btn-primary:active {
+        transform: translateY(1px);
+        box-shadow: 0 6px 16px rgba(0, 185, 104, 0.35);
+      }
+
+      .btn-secondary {
+        background: #eef2ff;
+        color: #1f3b6b;
+      }
+
+      .btn-secondary:active {
+        transform: translateY(1px);
+        box-shadow: 0 4px 10px rgba(143, 155, 179, 0.4);
+      }
+
+      .btn-ghost {
+        background: transparent;
+        color: #6b7b93;
+        border: 1px dashed #cbd2e5;
+      }
+
+      .btn-icon-circle {
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        background: rgba(15, 31, 61, 0.12);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 13px;
+      }
+
+      /* Current order list */
+      .current-order {
+        margin-top: 10px;
+        padding: 14px 14px 10px;
+        background: #f7fafc;
+        border-radius: 16px;
+        border: 1px solid #e1e7f0;
+      }
+
+      .current-order-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 8px;
+      }
+
+      .badge {
+        border-radius: 999px;
+        padding: 4px 10px;
+        font-size: 11px;
+        font-weight: 600;
+        background: rgba(16, 42, 67, 0.05);
+        color: #102a43;
+      }
+
+      .order-items {
+        list-style: none;
+        font-size: 13px;
+        color: #334e68;
+        max-height: 200px;
+        overflow-y: auto;
+      }
+
+      .order-item {
+        padding: 6px 0;
+        border-bottom: 1px solid #e1e7f0;
+      }
+
+      .order-item:last-child {
+        border-bottom: none;
+      }
+
+      .order-item small {
+        display: block;
+        font-size: 11px;
+        color: #9fb3c8;
+      }
+
+      .empty-state {
+        font-size: 12px;
+        color: #9fb3c8;
+        font-style: italic;
+      }
+
+      /* Modal dialog */
+      .modal-backdrop {
+        position: fixed;
+        inset: 0;
+        background: rgba(10, 23, 55, 0.5);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 50;
+      }
+
+      .modal-backdrop.show {
+        display: flex;
+      }
+
+      .modal-dialog {
+        background: #ffffff;
+        border-radius: 18px;
+        padding: 22px 22px 18px;
+        max-width: 420px;
+        width: 90%;
+        box-shadow: 0 22px 55px rgba(15, 35, 52, 0.35);
+      }
+
+      .modal-title {
+        font-size: 16px;
+        font-weight: 700;
+        margin-bottom: 4px;
+        color: #102a43;
+      }
+
+      .modal-subtitle {
+        font-size: 12px;
+        color: #7b8ba3;
+        margin-bottom: 10px;
+      }
+
+      .modal-order-lines {
+        background: #f7fafc;
+        border-radius: 12px;
+        padding: 10px 12px;
+        font-size: 13px;
+        color: #243b53;
+        max-height: 200px;
+        overflow-y: auto;
+        margin-bottom: 14px;
+      }
+
+      .modal-order-lines ul {
+        list-style: none;
+      }
+
+      .modal-order-lines li + li {
+        margin-top: 4px;
+      }
+
+      .modal-footer {
+        display: flex;
+        justify-content: flex-end;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="app-header">
+        <div class="brand">
+          <div class="brand-logo">LB</div>
+          <div>
+            <div class="brand-text-title">Lulabean</div>
+            <div class="brand-text-subtitle">
+              Youthful energy. Serious coffee.
+            </div>
+          </div>
+        </div>
+        <div class="header-cta">
+          <div class="header-pill">
+            <span class="header-pill-dot"></span>
+            Tablet Order Station · Ready
+          </div>
+          <div>Employ. Empower. <strong>Serve.</strong></div>
+        </div>
+      </header>
+
+      <div class="app-body">
+        <!-- LEFT: Order builder -->
+        <section class="panel" aria-label="New order">
+          <div class="panel-title">New Order</div>
+          <div class="panel-subtitle">
+            Capture items and we’ll automatically group them into a clean JSON
+            payload.
+          </div>
+
+          <div class="form-group">
+            <label for="itemSelect" class="label">1. Select an item</label>
+            <select id="itemSelect">
+              <option value="" disabled selected>Loading items…</option>
+            </select>
+            <div class="btn-row" style="margin-top: 10px">
+              <button id="addItemBtn" class="btn btn-secondary" type="button">
+                <span class="btn-icon-circle">+</span>
+                Add to order
+              </button>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <span class="label">2. Complete or clear this order</span>
+            <div class="btn-row">
+              <button
+                id="completeOrderBtn"
+                class="btn btn-primary"
+                type="button"
+              >
+                Complete order
+              </button>
+              <button id="newOrderBtn" class="btn btn-ghost" type="button">
+                Clear / New order
+              </button>
+            </div>
+          </div>
+
+          <div class="current-order" aria-live="polite">
+            <div class="current-order-header">
+              <div class="label" style="margin-bottom: 0">Current order</div>
+              <span id="itemCountBadge" class="badge">0 items</span>
+            </div>
+            <ul id="orderItemsList" class="order-items">
+              <li class="empty-state">
+                No items yet. Select an item and tap “Add another item”.
+              </li>
+            </ul>
+          </div>
+        </section>
+      </div>
+    </div>
+
+    <!-- Order summary modal -->
+    <div
+      id="orderModal"
+      class="modal-backdrop"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="orderModalTitle"
+    >
+      <div class="modal-dialog">
+        <div class="modal-title" id="orderModalTitle">Order captured</div>
+        <div class="modal-subtitle">
+          Here’s the order we’ve just sent through. You can start a fresh one
+          once you tap OK.
+        </div>
+        <div class="modal-order-lines">
+          <ul id="orderModalLines"></ul>
+        </div>
+        <div class="modal-footer">
+          <button id="orderModalOkBtn" class="btn btn-primary" type="button">
+            OK
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // Catalog keyed by the VISIBLE label text from the webhook
+      const ITEM_CATALOG = {
+        "Coffee – Cappuccino · Oat milk · Large · No sugar": {
+          category: "coffee",
+          name: "Cappuccino",
+          options: {
+            milk: "oat",
+            size: "large",
+            sugar: 0,
+          },
+        },
+        "Coffee – Cappuccino · Regular milk · Medium · 1 sugar": {
+          category: "coffee",
+          name: "Cappuccino",
+          options: {
+            milk: "regular",
+            size: "medium",
+            sugar: 1,
+          },
+        },
+        "Coffee – Espresso · Double shot": {
+          category: "coffee",
+          name: "Espresso",
+          options: {
+            shot: "double",
+          },
+        },
+        "Coffee – Flat White · Regular milk · Small · No sugar": {
+          category: "coffee",
+          name: "Flat White",
+          options: {
+            milk: "regular",
+            size: "small",
+            sugar: 0,
+          },
+        },
+        "Snack – Crookie · Chocolate": {
+          category: "snack",
+          name: "Crookie",
+          options: {
+            flavour: "chocolate",
+          },
+        },
+        "Snack – Muffin · Blueberry": {
+          category: "snack",
+          name: "Muffin",
+          options: {
+            flavour: "blueberry",
+          },
+        },
+        "Water – Sparkling · 500ml · Chilled": {
+          category: "water",
+          name: "Sparkling Water",
+          options: {
+            size: "500ml",
+            chilled: true,
+          },
+        },
+        "Water – Still · 500ml · Room temperature": {
+          category: "water",
+          name: "Still Water",
+          options: {
+            size: "500ml",
+            chilled: false,
+          },
+        },
+      };
+
+      const itemSelect = document.getElementById("itemSelect");
+      const addItemBtn = document.getElementById("addItemBtn");
+      const completeOrderBtn = document.getElementById("completeOrderBtn");
+      const newOrderBtn = document.getElementById("newOrderBtn");
+      const orderItemsList = document.getElementById("orderItemsList");
+      const itemCountBadge = document.getElementById("itemCountBadge");
+      const orderModal = document.getElementById("orderModal");
+      const orderModalLines = document.getElementById("orderModalLines");
+      const orderModalOkBtn = document.getElementById("orderModalOkBtn");
+
+      // Store the VISIBLE LABEL for each selection
+      let currentOrderSelections = [];
+
+      async function loadItemsFromWebhook() {
+        try {
+          const res = await fetch(
+            "https://hook.eu2.make.com/0xtcwsksn1bow2q6ujlq8shej4w6va8y"
+          );
+          const data = await res.json();
+
+          // Populate dropdown from response.
+          // Support both:
+          // 1) [{ body: [...] }]  (wrapped)
+          // 2) [{ "0": "Coffee …" }, ...]  (direct array, like your current debug output)
+          let body = [];
+          if (Array.isArray(data) && data.length > 0) {
+            if (data[0] && Array.isArray(data[0].body)) {
+              body = data[0].body;
+            } else {
+              body = data;
+            }
+          }
+          itemSelect.innerHTML =
+            '<option value="" disabled selected>Select an item…</option>';
+
+          body.forEach((entry) => {
+            const label = entry["0"];
+            if (!label) return;
+            const opt = document.createElement("option");
+            opt.value = label; // value is the label text
+            opt.textContent = label;
+            itemSelect.appendChild(opt);
+          });
+        } catch (err) {
+          console.error("Error loading webhook:", err);
+          itemSelect.innerHTML =
+            '<option value="" disabled selected>Error loading items</option>';
+          jsonOutput.textContent = `// Error loading webhook: ${err.message}`;
+        }
+      }
+
+      function updateOrderListUI() {
+        orderItemsList.innerHTML = "";
+
+        if (currentOrderSelections.length === 0) {
+          const li = document.createElement("li");
+          li.className = "empty-state";
+          li.textContent =
+            "No items yet. Select an item and tap “Add another item”.";
+          orderItemsList.appendChild(li);
+          itemCountBadge.textContent = "0 items";
+          return;
+        }
+
+        currentOrderSelections.forEach((label, index) => {
+          const catalogItem = ITEM_CATALOG[label];
+          const li = document.createElement("li");
+          li.className = "order-item";
+
+          const title = document.createElement("div");
+          if (catalogItem) {
+            title.textContent = `${
+              index + 1
+            }. ${catalogItem.category.toUpperCase()} – ${catalogItem.name}`;
+          } else {
+            title.textContent = `${index + 1}. ${label}`;
+          }
+
+          const subtitle = document.createElement("small");
+          if (catalogItem && catalogItem.options) {
+            subtitle.textContent = humanizeOptions(catalogItem.options);
+          } else {
+            subtitle.textContent = label;
+          }
+
+          li.appendChild(title);
+          li.appendChild(subtitle);
+          orderItemsList.appendChild(li);
+        });
+
+        const count = currentOrderSelections.length;
+        itemCountBadge.textContent = `${count} item${count === 1 ? "" : "s"}`;
+      }
+
+      function humanizeOptions(options) {
+        return Object.entries(options)
+          .map(([k, v]) => `${k}: ${String(v)}`)
+          .join(", ");
+      }
+
+      function addSelectedItem() {
+        const label = itemSelect.value;
+        if (!label) {
+          alert("Please choose an item before adding it to the order.");
+          return;
+        }
+        currentOrderSelections.push(label);
+        updateOrderListUI();
+      }
+
+      function clearOrder() {
+        currentOrderSelections = [];
+        updateOrderListUI();
+      }
+
+      function showOrderModal(whatsappItems) {
+        orderModalLines.innerHTML = "";
+        if (!whatsappItems || whatsappItems.length === 0) {
+          const li = document.createElement("li");
+          li.textContent = "No items in this order.";
+          orderModalLines.appendChild(li);
+        } else {
+          whatsappItems.forEach((entry) => {
+            const li = document.createElement("li");
+            li.textContent = entry.item;
+            orderModalLines.appendChild(li);
+          });
+        }
+        orderModal.classList.add("show");
+      }
+
+      function hideOrderModal() {
+        orderModal.classList.remove("show");
+      }
+
+      function completeOrder() {
+        if (currentOrderSelections.length === 0) {
+          alert("You have no items in this order yet.");
+          return;
+        }
+
+        // Aggregate items by (category + name + options) for JSON panel
+        const aggregateMap = new Map();
+
+        for (const label of currentOrderSelections) {
+          const catalogItem = ITEM_CATALOG[label];
+
+          let category, name, options;
+          if (catalogItem) {
+            category = catalogItem.category;
+            name = catalogItem.name;
+            options = catalogItem.options;
+          } else {
+            category = "item";
+            name = label;
+            options = {};
+          }
+
+          const optionsJson = JSON.stringify(
+            options,
+            Object.keys(options).sort()
+          );
+          const mapKey = `${category}::${name}::${optionsJson}`;
+
+          if (!aggregateMap.has(mapKey)) {
+            aggregateMap.set(mapKey, {
+              category,
+              name,
+              quantity: 0,
+              options,
+            });
+          }
+          const existing = aggregateMap.get(mapKey);
+          existing.quantity += 1;
+        }
+
+        const payload = {
+          items: Array.from(aggregateMap.values()),
+        };
+
+        console.log("Order JSON:", payload);
+
+        // Build per-line WhatsApp entries using the ORIGINAL dropdown text,
+        // grouped by label, e.g. "2 x Coffee – Espresso · Double shot"
+        const labelCounts = new Map();
+        for (const label of currentOrderSelections) {
+          labelCounts.set(label, (labelCounts.get(label) || 0) + 1);
+        }
+
+        const whatsappItems = Array.from(labelCounts.entries()).map(
+          ([label, qty]) => ({
+            item: `${qty} x ${label}`,
+          })
+        );
+
+        console.log("WhatsApp items:", whatsappItems);
+
+        // POST to Make webhook for WhatsApp delivery
+        // We send: { items: [ { item: "1 x Coffee – …" }, ... ] }
+        fetch("https://hook.eu2.make.com/ntio3991uxnmqjwx2tfj8xusgvn5ft5a", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ items: whatsappItems }),
+        })
+          .catch((err) => {
+            console.error("Error sending WhatsApp webhook:", err);
+          })
+          .finally(() => {
+            showOrderModal(whatsappItems);
+          });
+      }
+
+      addItemBtn.addEventListener("click", addSelectedItem);
+      completeOrderBtn.addEventListener("click", completeOrder);
+      newOrderBtn.addEventListener("click", clearOrder);
+      orderModalOkBtn.addEventListener("click", () => {
+        hideOrderModal();
+        clearOrder();
+      });
+
+      updateOrderListUI();
+      window.addEventListener("load", loadItemsFromWebhook);
+    </script>
+  </body>
+</html>
