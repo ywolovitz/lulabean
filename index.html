@@ -4,6 +4,13 @@
     <meta charset="UTF-8" />
     <title>Lulabean – Tablet Order</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/jpeg" href="assets/favicon.jpg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Montserrat:wght@600;700;800&display=swap"
+      rel="stylesheet"
+    />
     <style>
       /* Basic reset */
       * {
@@ -13,10 +20,10 @@
       }
 
       body {
-        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
-          sans-serif;
-        background: #f4f7fb;
-        color: #102a43;
+        font-family: "Barlow", system-ui, -apple-system, BlinkMacSystemFont,
+          "Segoe UI", sans-serif;
+        background: #e8e8e8;
+        color: #000000;
         display: flex;
         justify-content: center;
         align-items: flex-start;
@@ -29,14 +36,14 @@
         width: 100%;
         background: #ffffff;
         border-radius: 24px;
-        box-shadow: 0 18px 45px rgba(15, 35, 52, 0.18);
+        box-shadow: 0 18px 45px rgba(0, 0, 0, 0.15);
         overflow: hidden;
         display: flex;
         flex-direction: column;
       }
 
       .app-header {
-        background: linear-gradient(135deg, #0f1f3d, #182a4f);
+        background: #c62d2e;
         color: #ffffff;
         padding: 20px 28px;
         display: flex;
@@ -54,19 +61,21 @@
         width: 36px;
         height: 36px;
         border-radius: 50%;
-        background: #00b968;
+        background: #ffffff;
         display: flex;
         align-items: center;
         justify-content: center;
-        color: #0f1f3d;
+        color: #c62d2e;
         font-weight: 800;
         font-size: 18px;
+        font-family: "Montserrat", sans-serif;
       }
 
       .brand-text-title {
         font-size: 20px;
         font-weight: 700;
         letter-spacing: 0.04em;
+        font-family: "Montserrat", sans-serif;
       }
 
       .brand-text-subtitle {
@@ -83,7 +92,7 @@
       }
 
       .header-pill {
-        background: rgba(0, 185, 104, 0.1);
+        background: rgba(255, 255, 255, 0.2);
         border-radius: 99px;
         padding: 6px 14px;
         display: inline-flex;
@@ -96,7 +105,7 @@
         width: 7px;
         height: 7px;
         border-radius: 50%;
-        background: #00e08a;
+        background: #ffffff;
       }
 
       .app-body {
@@ -116,13 +125,13 @@
       }
 
       .panel + .panel {
-        border-left: 1px solid #e1e7f0;
+        border-left: 1px solid #d8d8d8;
       }
 
       @media (max-width: 900px) {
         .panel + .panel {
           border-left: none;
-          border-top: 1px solid #e1e7f0;
+          border-top: 1px solid #d8d8d8;
         }
       }
 
@@ -130,16 +139,14 @@
         font-size: 18px;
         font-weight: 700;
         margin-bottom: 4px;
+        font-family: "Montserrat", sans-serif;
+        color: #000000;
       }
 
       .panel-subtitle {
         font-size: 13px;
-        color: #6b7b93;
-        margin-bottom: 18px;
-      }
-
-      /* Form controls */
-      .form-group {
+        color: #000000;
+        opacity: 0.7;
         margin-bottom: 18px;
       }
 
@@ -148,24 +155,61 @@
         font-weight: 600;
         margin-bottom: 6px;
         display: block;
-        color: #243b53;
+        color: #000000;
       }
 
-      select {
-        width: 100%;
-        padding: 12px 14px;
-        border-radius: 10px;
-        border: 1px solid #d5deea;
-        font-size: 15px;
-        background: #f9fbff;
-        outline: none;
-        transition: border-color 0.15s ease, box-shadow 0.15s ease;
+      /* Menu items */
+      .menu-grid {
+        display: grid;
+        gap: 14px;
+        margin-bottom: 20px;
       }
 
-      select:focus {
-        border-color: #00b968;
-        box-shadow: 0 0 0 2px rgba(0, 185, 104, 0.15);
+      .menu-item {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding: 12px;
         background: #ffffff;
+        border-radius: 12px;
+        border: 1px solid #d8d8d8;
+        transition: all 0.15s ease;
+      }
+
+      .menu-item:hover {
+        background: #e8e8e8;
+        border-color: #c62d2e;
+      }
+
+      .menu-item-image {
+        width: 80px;
+        height: 80px;
+        object-fit: cover;
+        border-radius: 10px;
+        flex-shrink: 0;
+      }
+
+      .menu-item-content {
+        flex: 1;
+        min-width: 0;
+      }
+
+      .menu-item-name {
+        font-size: 16px;
+        font-weight: 600;
+        color: #000000;
+        margin-bottom: 2px;
+        font-family: "Montserrat", sans-serif;
+      }
+
+      .menu-item-category {
+        font-size: 12px;
+        color: #000000;
+        opacity: 0.6;
+      }
+
+      .menu-item-button {
+        flex-shrink: 0;
       }
 
       /* Buttons */
@@ -192,50 +236,40 @@
       }
 
       .btn-primary {
-        background: #00b968;
-        color: #0f1f3d;
-        box-shadow: 0 10px 25px rgba(0, 185, 104, 0.35);
+        background: #c62d2e;
+        color: #ffffff;
+        box-shadow: 0 10px 25px rgba(198, 45, 46, 0.35);
       }
 
       .btn-primary:active {
         transform: translateY(1px);
-        box-shadow: 0 6px 16px rgba(0, 185, 104, 0.35);
+        box-shadow: 0 6px 16px rgba(198, 45, 46, 0.35);
       }
 
       .btn-secondary {
-        background: #eef2ff;
-        color: #1f3b6b;
+        background: #ffffff;
+        color: #c62d2e;
+        border: 2px solid #c62d2e;
       }
 
       .btn-secondary:active {
         transform: translateY(1px);
-        box-shadow: 0 4px 10px rgba(143, 155, 179, 0.4);
+        box-shadow: 0 4px 10px rgba(198, 45, 46, 0.2);
       }
 
       .btn-ghost {
         background: transparent;
-        color: #6b7b93;
-        border: 1px dashed #cbd2e5;
-      }
-
-      .btn-icon-circle {
-        width: 22px;
-        height: 22px;
-        border-radius: 50%;
-        background: rgba(15, 31, 61, 0.12);
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 13px;
+        color: #000000;
+        border: 1px dashed #d8d8d8;
       }
 
       /* Current order list */
       .current-order {
         margin-top: 10px;
         padding: 14px 14px 10px;
-        background: #f7fafc;
+        background: #e8e8e8;
         border-radius: 16px;
-        border: 1px solid #e1e7f0;
+        border: 1px solid #d8d8d8;
       }
 
       .current-order-header {
@@ -250,21 +284,21 @@
         padding: 4px 10px;
         font-size: 11px;
         font-weight: 600;
-        background: rgba(16, 42, 67, 0.05);
-        color: #102a43;
+        background: #c62d2e;
+        color: #ffffff;
       }
 
       .order-items {
         list-style: none;
         font-size: 13px;
-        color: #334e68;
-        max-height: 200px;
+        color: #000000;
+        max-height: 400px;
         overflow-y: auto;
       }
 
       .order-item {
         padding: 6px 0;
-        border-bottom: 1px solid #e1e7f0;
+        border-bottom: 1px solid #d8d8d8;
       }
 
       .order-item:last-child {
@@ -274,20 +308,22 @@
       .order-item small {
         display: block;
         font-size: 11px;
-        color: #9fb3c8;
+        color: #000000;
+        opacity: 0.6;
       }
 
       .empty-state {
         font-size: 12px;
-        color: #9fb3c8;
+        color: #000000;
+        opacity: 0.5;
         font-style: italic;
       }
 
-      /* Modal dialog */
+      /* Modal dialogs */
       .modal-backdrop {
         position: fixed;
         inset: 0;
-        background: rgba(10, 23, 55, 0.5);
+        background: rgba(0, 0, 0, 0.5);
         display: none;
         align-items: center;
         justify-content: center;
@@ -311,21 +347,72 @@
         font-size: 16px;
         font-weight: 700;
         margin-bottom: 4px;
-        color: #102a43;
+        color: #000000;
+        font-family: "Montserrat", sans-serif;
       }
 
       .modal-subtitle {
         font-size: 12px;
-        color: #7b8ba3;
-        margin-bottom: 10px;
+        color: #000000;
+        opacity: 0.7;
+        margin-bottom: 16px;
+      }
+
+      .modal-form-group {
+        margin-bottom: 16px;
+      }
+
+      .modal-label {
+        font-size: 13px;
+        font-weight: 600;
+        margin-bottom: 8px;
+        display: block;
+        color: #000000;
+        font-family: "Montserrat", sans-serif;
+      }
+
+      .modal-options {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .modal-option-btn {
+        padding: 10px 16px;
+        border-radius: 8px;
+        border: 2px solid #d8d8d8;
+        background: #ffffff;
+        color: #000000;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.15s ease;
+      }
+
+      .modal-option-btn:hover {
+        border-color: #c62d2e;
+        background: #ffffff;
+      }
+
+      .modal-option-btn.selected {
+        border-color: #c62d2e;
+        background: #c62d2e;
+        color: #ffffff;
+      }
+
+      .modal-footer {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        margin-top: 20px;
       }
 
       .modal-order-lines {
-        background: #f7fafc;
+        background: #e8e8e8;
         border-radius: 12px;
         padding: 10px 12px;
         font-size: 13px;
-        color: #243b53;
+        color: #000000;
         max-height: 200px;
         overflow-y: auto;
         margin-bottom: 14px;
@@ -337,11 +424,6 @@
 
       .modal-order-lines li + li {
         margin-top: 4px;
-      }
-
-      .modal-footer {
-        display: flex;
-        justify-content: flex-end;
       }
     </style>
   </head>
@@ -367,26 +449,99 @@
       </header>
 
       <div class="app-body">
-        <!-- LEFT: Order builder -->
-        <section class="panel" aria-label="New order">
-          <div class="panel-title">New Order</div>
-          <div class="panel-subtitle"></div>
+        <!-- LEFT: Menu and Order builder -->
+        <section class="panel" aria-label="Menu">
+          <div class="panel-title">Menu</div>
+          <div class="panel-subtitle">Select items to add to your order</div>
 
-          <div class="form-group">
-            <label for="itemSelect" class="label">1. Select an item</label>
-            <select id="itemSelect">
-              <option value="" disabled selected>Loading items…</option>
-            </select>
-            <div class="btn-row" style="margin-top: 10px">
-              <button id="addItemBtn" class="btn btn-secondary" type="button">
-                <span class="btn-icon-circle">+</span>
-                Add to order
-              </button>
+          <div class="menu-grid">
+            <div class="menu-item">
+              <img
+                src="assets/cappuccino.jpg"
+                alt="Cappuccino"
+                class="menu-item-image"
+              />
+              <div class="menu-item-content">
+                <div class="menu-item-name">Cappuccino</div>
+                <div class="menu-item-category">Coffee</div>
+              </div>
+              <div class="menu-item-button">
+                <button
+                  class="btn btn-secondary"
+                  type="button"
+                  data-item="cappuccino"
+                >
+                  Add to Order
+                </button>
+              </div>
+            </div>
+
+            <div class="menu-item">
+              <img
+                src="assets/espresso.jpg"
+                alt="Espresso"
+                class="menu-item-image"
+              />
+              <div class="menu-item-content">
+                <div class="menu-item-name">Espresso</div>
+                <div class="menu-item-category">Coffee</div>
+              </div>
+              <div class="menu-item-button">
+                <button
+                  class="btn btn-secondary"
+                  type="button"
+                  data-item="espresso"
+                >
+                  Add to Order
+                </button>
+              </div>
+            </div>
+
+            <div class="menu-item">
+              <img
+                src="assets/stillwater.jpg"
+                alt="Still Water"
+                class="menu-item-image"
+              />
+              <div class="menu-item-content">
+                <div class="menu-item-name">Still Water</div>
+                <div class="menu-item-category">Water</div>
+              </div>
+              <div class="menu-item-button">
+                <button
+                  class="btn btn-secondary"
+                  type="button"
+                  data-item="stillwater"
+                >
+                  Add to Order
+                </button>
+              </div>
+            </div>
+
+            <div class="menu-item">
+              <img
+                src="assets/sparklingwater.jpg"
+                alt="Sparkling Water"
+                class="menu-item-image"
+              />
+              <div class="menu-item-content">
+                <div class="menu-item-name">Sparkling Water</div>
+                <div class="menu-item-category">Water</div>
+              </div>
+              <div class="menu-item-button">
+                <button
+                  class="btn btn-secondary"
+                  type="button"
+                  data-item="sparklingwater"
+                >
+                  Add to Order
+                </button>
+              </div>
             </div>
           </div>
 
           <div class="form-group">
-            <span class="label">2. Complete or clear this order</span>
+            <span class="label">Complete or clear this order</span>
             <div class="btn-row">
               <button
                 id="completeOrderBtn"
@@ -400,6 +555,12 @@
               </button>
             </div>
           </div>
+        </section>
+
+        <!-- RIGHT: Order Summary -->
+        <section class="panel" aria-label="Order Summary">
+          <div class="panel-title">Order Summary</div>
+          <div class="panel-subtitle">Review your current order</div>
 
           <div class="current-order" aria-live="polite">
             <div class="current-order-header">
@@ -408,11 +569,42 @@
             </div>
             <ul id="orderItemsList" class="order-items">
               <li class="empty-state">
-                No items yet. Select an item and tap “Add another item”.
+                No items yet. Select an item and tap "Add to Order".
               </li>
             </ul>
           </div>
         </section>
+      </div>
+    </div>
+
+    <!-- Options modal (for Cappuccino, Espresso, Waters) -->
+    <div
+      id="optionsModal"
+      class="modal-backdrop"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="optionsModalTitle"
+    >
+      <div class="modal-dialog">
+        <div class="modal-title" id="optionsModalTitle">Select options</div>
+        <div class="modal-subtitle" id="optionsModalSubtitle"></div>
+        <div id="optionsModalContent"></div>
+        <div class="modal-footer">
+          <button
+            id="optionsModalCancelBtn"
+            class="btn btn-ghost"
+            type="button"
+          >
+            Cancel
+          </button>
+          <button
+            id="optionsModalConfirmBtn"
+            class="btn btn-primary"
+            type="button"
+          >
+            Add to Order
+          </button>
+        </div>
       </div>
     </div>
 
@@ -427,7 +619,7 @@
       <div class="modal-dialog">
         <div class="modal-title" id="orderModalTitle">Order captured</div>
         <div class="modal-subtitle">
-          Here’s the order we’ve just sent through. You can start a fresh one
+          Here's the order we've just sent through. You can start a fresh one
           once you tap OK.
         </div>
         <div class="modal-order-lines">
@@ -442,187 +634,279 @@
     </div>
 
     <script>
-      // Catalog keyed by the VISIBLE label text from the webhook
-      const ITEM_CATALOG = {
-        "Coffee – Cappuccino · Oat milk · Large · No sugar": {
-          category: "coffee",
-          name: "Cappuccino",
-          options: {
-            milk: "oat",
-            size: "large",
-            sugar: 0,
-          },
-        },
-        "Coffee – Cappuccino · Regular milk · Medium · 1 sugar": {
-          category: "coffee",
-          name: "Cappuccino",
-          options: {
-            milk: "regular",
-            size: "medium",
-            sugar: 1,
-          },
-        },
-        "Coffee – Espresso · Double shot": {
-          category: "coffee",
-          name: "Espresso",
-          options: {
-            shot: "double",
-          },
-        },
-        "Coffee – Flat White · Regular milk · Small · No sugar": {
-          category: "coffee",
-          name: "Flat White",
-          options: {
-            milk: "regular",
-            size: "small",
-            sugar: 0,
-          },
-        },
-        "Snack – Crookie · Chocolate": {
-          category: "snack",
-          name: "Crookie",
-          options: {
-            flavour: "chocolate",
-          },
-        },
-        "Snack – Muffin · Blueberry": {
-          category: "snack",
-          name: "Muffin",
-          options: {
-            flavour: "blueberry",
-          },
-        },
-        "Water – Sparkling · 500ml · Chilled": {
-          category: "water",
-          name: "Sparkling Water",
-          options: {
-            size: "500ml",
-            chilled: true,
-          },
-        },
-        "Water – Still · 500ml · Room temperature": {
-          category: "water",
-          name: "Still Water",
-          options: {
-            size: "500ml",
-            chilled: false,
-          },
-        },
-      };
+      // Store order items with their options
+      // Each item: { name: "Cappuccino", options: { shot: "double", milk: "regular" }, ... }
+      let currentOrderItems = [];
 
-      const itemSelect = document.getElementById("itemSelect");
-      const addItemBtn = document.getElementById("addItemBtn");
-      const completeOrderBtn = document.getElementById("completeOrderBtn");
-      const newOrderBtn = document.getElementById("newOrderBtn");
+      // Current item being configured in the options modal
+      let currentItemBeingConfigured = null;
+
       const orderItemsList = document.getElementById("orderItemsList");
       const itemCountBadge = document.getElementById("itemCountBadge");
+      const completeOrderBtn = document.getElementById("completeOrderBtn");
+      const newOrderBtn = document.getElementById("newOrderBtn");
       const orderModal = document.getElementById("orderModal");
       const orderModalLines = document.getElementById("orderModalLines");
       const orderModalOkBtn = document.getElementById("orderModalOkBtn");
+      const optionsModal = document.getElementById("optionsModal");
+      const optionsModalTitle = document.getElementById("optionsModalTitle");
+      const optionsModalSubtitle = document.getElementById(
+        "optionsModalSubtitle"
+      );
+      const optionsModalContent = document.getElementById(
+        "optionsModalContent"
+      );
+      const optionsModalCancelBtn = document.getElementById(
+        "optionsModalCancelBtn"
+      );
+      const optionsModalConfirmBtn = document.getElementById(
+        "optionsModalConfirmBtn"
+      );
 
-      // Store the VISIBLE LABEL for each selection
-      let currentOrderSelections = [];
+      // Menu item buttons
+      const menuButtons = document.querySelectorAll("[data-item]");
+      menuButtons.forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const itemType = btn.getAttribute("data-item");
+          openOptionsModal(itemType);
+        });
+      });
 
-      async function loadItemsFromWebhook() {
-        try {
-          const res = await fetch(
-            "https://hook.eu2.make.com/0xtcwsksn1bow2q6ujlq8shej4w6va8y"
-          );
-          const data = await res.json();
+      function openOptionsModal(itemType) {
+        currentItemBeingConfigured = { type: itemType };
+        optionsModalContent.innerHTML = "";
 
-          // Populate dropdown from response.
-          // Support both:
-          // 1) [{ body: [...] }]  (wrapped)
-          // 2) [{ "0": "Coffee …" }, ...]  (direct array, like your current debug output)
-          let body = [];
-          if (Array.isArray(data) && data.length > 0) {
-            if (data[0] && Array.isArray(data[0].body)) {
-              body = data[0].body;
-            } else {
-              body = data;
-            }
-          }
-          itemSelect.innerHTML =
-            '<option value="" disabled selected>Select an item…</option>';
+        if (itemType === "cappuccino") {
+          optionsModalTitle.textContent = "Cappuccino Options";
+          optionsModalSubtitle.textContent = "Select your preferences";
 
-          body.forEach((entry) => {
-            const label = entry["0"];
-            if (!label) return;
-            const opt = document.createElement("option");
-            opt.value = label; // value is the label text
-            opt.textContent = label;
-            itemSelect.appendChild(opt);
+          // Shot selection
+          const shotGroup = document.createElement("div");
+          shotGroup.className = "modal-form-group";
+          shotGroup.innerHTML = '<label class="modal-label">Shot</label>';
+          const shotOptions = document.createElement("div");
+          shotOptions.className = "modal-options";
+          ["single", "double"].forEach((shot) => {
+            const btn = document.createElement("button");
+            btn.type = "button";
+            btn.className = "modal-option-btn";
+            btn.textContent =
+              shot.charAt(0).toUpperCase() + shot.slice(1) + " shot";
+            btn.dataset.value = shot;
+            btn.addEventListener("click", () => {
+              document
+                .querySelectorAll(".modal-options button")
+                .forEach((b) => {
+                  if (b.parentElement === shotOptions)
+                    b.classList.remove("selected");
+                });
+              btn.classList.add("selected");
+              currentItemBeingConfigured.shot = shot;
+            });
+            shotOptions.appendChild(btn);
           });
-        } catch (err) {
-          console.error("Error loading webhook:", err);
-          itemSelect.innerHTML =
-            '<option value="" disabled selected>Error loading items</option>';
-          jsonOutput.textContent = `// Error loading webhook: ${err.message}`;
+          shotGroup.appendChild(shotOptions);
+          optionsModalContent.appendChild(shotGroup);
+
+          // Milk selection
+          const milkGroup = document.createElement("div");
+          milkGroup.className = "modal-form-group";
+          milkGroup.innerHTML = '<label class="modal-label">Milk</label>';
+          const milkOptions = document.createElement("div");
+          milkOptions.className = "modal-options";
+          ["low fat", "regular", "soya"].forEach((milk) => {
+            const btn = document.createElement("button");
+            btn.type = "button";
+            btn.className = "modal-option-btn";
+            btn.textContent = milk.charAt(0).toUpperCase() + milk.slice(1);
+            btn.dataset.value = milk;
+            btn.addEventListener("click", () => {
+              document
+                .querySelectorAll(".modal-options button")
+                .forEach((b) => {
+                  if (b.parentElement === milkOptions)
+                    b.classList.remove("selected");
+                });
+              btn.classList.add("selected");
+              currentItemBeingConfigured.milk = milk;
+            });
+            milkOptions.appendChild(btn);
+          });
+          milkGroup.appendChild(milkOptions);
+          optionsModalContent.appendChild(milkGroup);
+        } else if (itemType === "espresso") {
+          optionsModalTitle.textContent = "Espresso Options";
+          optionsModalSubtitle.textContent = "Select your preference";
+
+          const shotGroup = document.createElement("div");
+          shotGroup.className = "modal-form-group";
+          shotGroup.innerHTML = '<label class="modal-label">Shot</label>';
+          const shotOptions = document.createElement("div");
+          shotOptions.className = "modal-options";
+          ["single", "double"].forEach((shot) => {
+            const btn = document.createElement("button");
+            btn.type = "button";
+            btn.className = "modal-option-btn";
+            btn.textContent =
+              shot.charAt(0).toUpperCase() + shot.slice(1) + " shot";
+            btn.dataset.value = shot;
+            btn.addEventListener("click", () => {
+              document
+                .querySelectorAll(".modal-options button")
+                .forEach((b) => {
+                  if (b.parentElement === shotOptions)
+                    b.classList.remove("selected");
+                });
+              btn.classList.add("selected");
+              currentItemBeingConfigured.shot = shot;
+            });
+            shotOptions.appendChild(btn);
+          });
+          shotGroup.appendChild(shotOptions);
+          optionsModalContent.appendChild(shotGroup);
+        } else if (itemType === "stillwater" || itemType === "sparklingwater") {
+          const itemName =
+            itemType === "stillwater" ? "Still Water" : "Sparkling Water";
+          optionsModalTitle.textContent = `${itemName} Options`;
+          optionsModalSubtitle.textContent = "Select temperature";
+
+          const tempGroup = document.createElement("div");
+          tempGroup.className = "modal-form-group";
+          tempGroup.innerHTML =
+            '<label class="modal-label">Temperature</label>';
+          const tempOptions = document.createElement("div");
+          tempOptions.className = "modal-options";
+          ["Fridge", "Room temp"].forEach((temp) => {
+            const btn = document.createElement("button");
+            btn.type = "button";
+            btn.className = "modal-option-btn";
+            btn.textContent = temp;
+            btn.dataset.value = temp.toLowerCase().replace(" ", "");
+            btn.addEventListener("click", () => {
+              document
+                .querySelectorAll(".modal-options button")
+                .forEach((b) => {
+                  if (b.parentElement === tempOptions)
+                    b.classList.remove("selected");
+                });
+              btn.classList.add("selected");
+              currentItemBeingConfigured.temperature = temp;
+            });
+            tempOptions.appendChild(btn);
+          });
+          tempGroup.appendChild(tempOptions);
+          optionsModalContent.appendChild(tempGroup);
         }
+
+        optionsModal.classList.add("show");
+      }
+
+      function hideOptionsModal() {
+        optionsModal.classList.remove("show");
+        currentItemBeingConfigured = null;
+      }
+
+      function addItemToOrder() {
+        if (!currentItemBeingConfigured) return;
+
+        const { type, ...options } = currentItemBeingConfigured;
+
+        // Validate required options
+        if (type === "cappuccino" && (!options.shot || !options.milk)) {
+          alert("Please select both shot and milk options.");
+          return;
+        }
+        if (type === "espresso" && !options.shot) {
+          alert("Please select a shot option.");
+          return;
+        }
+        if (
+          (type === "stillwater" || type === "sparklingwater") &&
+          !options.temperature
+        ) {
+          alert("Please select a temperature option.");
+          return;
+        }
+
+        // Create order item
+        const item = {
+          name:
+            type === "cappuccino"
+              ? "Cappuccino"
+              : type === "espresso"
+              ? "Espresso"
+              : type === "stillwater"
+              ? "Still Water"
+              : "Sparkling Water",
+          options: { ...options },
+        };
+
+        currentOrderItems.push(item);
+        updateOrderListUI();
+        hideOptionsModal();
       }
 
       function updateOrderListUI() {
         orderItemsList.innerHTML = "";
 
-        if (currentOrderSelections.length === 0) {
+        if (currentOrderItems.length === 0) {
           const li = document.createElement("li");
           li.className = "empty-state";
           li.textContent =
-            "No items yet. Select an item and tap “Add another item”.";
+            'No items yet. Select an item and tap "Add to Order".';
           orderItemsList.appendChild(li);
           itemCountBadge.textContent = "0 items";
           return;
         }
 
-        currentOrderSelections.forEach((label, index) => {
-          const catalogItem = ITEM_CATALOG[label];
+        currentOrderItems.forEach((item, index) => {
           const li = document.createElement("li");
           li.className = "order-item";
 
           const title = document.createElement("div");
-          if (catalogItem) {
-            title.textContent = `${
-              index + 1
-            }. ${catalogItem.category.toUpperCase()} – ${catalogItem.name}`;
-          } else {
-            title.textContent = `${index + 1}. ${label}`;
-          }
+          title.textContent = `${index + 1}. ${item.name}`;
 
           const subtitle = document.createElement("small");
-          if (catalogItem && catalogItem.options) {
-            subtitle.textContent = humanizeOptions(catalogItem.options);
-          } else {
-            subtitle.textContent = label;
+          const optionParts = [];
+          if (item.options.shot) {
+            optionParts.push(`${item.options.shot} shot`);
           }
+          if (item.options.milk) {
+            optionParts.push(item.options.milk + " milk");
+          }
+          if (item.options.temperature) {
+            optionParts.push(item.options.temperature);
+          }
+          subtitle.textContent = optionParts.join(", ") || "No options";
 
           li.appendChild(title);
           li.appendChild(subtitle);
           orderItemsList.appendChild(li);
         });
 
-        const count = currentOrderSelections.length;
+        const count = currentOrderItems.length;
         itemCountBadge.textContent = `${count} item${count === 1 ? "" : "s"}`;
       }
 
-      function humanizeOptions(options) {
-        return Object.entries(options)
-          .map(([k, v]) => `${k}: ${String(v)}`)
-          .join(", ");
-      }
-
-      function addSelectedItem() {
-        const label = itemSelect.value;
-        if (!label) {
-          alert("Please choose an item before adding it to the order.");
-          return;
-        }
-        currentOrderSelections.push(label);
-        updateOrderListUI();
-      }
-
       function clearOrder() {
-        currentOrderSelections = [];
+        currentOrderItems = [];
         updateOrderListUI();
+      }
+
+      function formatItemForWhatsApp(item) {
+        const parts = [item.name];
+
+        if (item.options.shot) {
+          parts.push(`${item.options.shot} shot`);
+        }
+        if (item.options.milk) {
+          parts.push(item.options.milk + " milk");
+        }
+        if (item.options.temperature) {
+          parts.push(item.options.temperature);
+        }
+
+        return parts.join(", ");
       }
 
       function showOrderModal(whatsappItems) {
@@ -646,69 +930,43 @@
       }
 
       function completeOrder() {
-        if (currentOrderSelections.length === 0) {
+        if (currentOrderItems.length === 0) {
           alert("You have no items in this order yet.");
           return;
         }
 
-        // Aggregate items by (category + name + options) for JSON panel
+        // Aggregate items by unique combination (name + options)
         const aggregateMap = new Map();
 
-        for (const label of currentOrderSelections) {
-          const catalogItem = ITEM_CATALOG[label];
-
-          let category, name, options;
-          if (catalogItem) {
-            category = catalogItem.category;
-            name = catalogItem.name;
-            options = catalogItem.options;
-          } else {
-            category = "item";
-            name = label;
-            options = {};
-          }
-
-          const optionsJson = JSON.stringify(
-            options,
-            Object.keys(options).sort()
+        for (const item of currentOrderItems) {
+          const optionsKey = JSON.stringify(
+            item.options,
+            Object.keys(item.options).sort()
           );
-          const mapKey = `${category}::${name}::${optionsJson}`;
+          const mapKey = `${item.name}::${optionsKey}`;
 
           if (!aggregateMap.has(mapKey)) {
             aggregateMap.set(mapKey, {
-              category,
-              name,
+              name: item.name,
+              options: item.options,
               quantity: 0,
-              options,
             });
           }
           const existing = aggregateMap.get(mapKey);
           existing.quantity += 1;
         }
 
-        const payload = {
-          items: Array.from(aggregateMap.values()),
-        };
-
-        console.log("Order JSON:", payload);
-
-        // Build per-line WhatsApp entries using the ORIGINAL dropdown text,
-        // grouped by label, e.g. "2 x Coffee – Espresso · Double shot"
-        const labelCounts = new Map();
-        for (const label of currentOrderSelections) {
-          labelCounts.set(label, (labelCounts.get(label) || 0) + 1);
-        }
-
-        const whatsappItems = Array.from(labelCounts.entries()).map(
-          ([label, qty]) => ({
-            item: `${qty} x ${label}`,
-          })
-        );
+        // Build WhatsApp message items
+        const whatsappItems = Array.from(aggregateMap.values()).map((entry) => {
+          const formatted = formatItemForWhatsApp(entry);
+          return {
+            item: `${entry.quantity} x ${formatted}`,
+          };
+        });
 
         console.log("WhatsApp items:", whatsappItems);
 
         // POST to Make webhook for WhatsApp delivery
-        // We send: { items: [ { item: "1 x Coffee – …" }, ... ] }
         fetch("https://hook.eu2.make.com/ntio3991uxnmqjwx2tfj8xusgvn5ft5a", {
           method: "POST",
           headers: {
@@ -724,16 +982,18 @@
           });
       }
 
-      addItemBtn.addEventListener("click", addSelectedItem);
+      // Event listeners
       completeOrderBtn.addEventListener("click", completeOrder);
       newOrderBtn.addEventListener("click", clearOrder);
       orderModalOkBtn.addEventListener("click", () => {
         hideOrderModal();
         clearOrder();
       });
+      optionsModalCancelBtn.addEventListener("click", hideOptionsModal);
+      optionsModalConfirmBtn.addEventListener("click", addItemToOrder);
 
+      // Initialize UI
       updateOrderListUI();
-      window.addEventListener("load", loadItemsFromWebhook);
     </script>
   </body>
 </html>
