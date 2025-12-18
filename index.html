@@ -158,6 +158,40 @@
         color: #000000;
       }
 
+      .order-options {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+        margin-bottom: 20px;
+        padding: 16px;
+        background: #e8e8e8;
+        border-radius: 12px;
+        border: 1px solid #d8d8d8;
+      }
+
+      @media (max-width: 600px) {
+        .order-options {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .order-options select {
+        width: 100%;
+        padding: 10px 12px;
+        border-radius: 8px;
+        border: 1px solid #d8d8d8;
+        font-size: 14px;
+        background: #ffffff;
+        outline: none;
+        transition: border-color 0.15s ease, box-shadow 0.15s ease;
+        font-family: "Barlow", sans-serif;
+      }
+
+      .order-options select:focus {
+        border-color: #c62d2e;
+        box-shadow: 0 0 0 2px rgba(198, 45, 46, 0.15);
+      }
+
       /* Menu items */
       .menu-grid {
         display: grid;
@@ -454,6 +488,25 @@
           <div class="panel-title">Menu</div>
           <div class="panel-subtitle">Select items to add to your order</div>
 
+          <div class="order-options">
+            <div>
+              <label for="recipientSelect" class="label">Order with:</label>
+              <select id="recipientSelect">
+                <option value="" disabled selected>
+                  Loading recipients...
+                </option>
+              </select>
+            </div>
+            <div>
+              <label for="destinationSelect" class="label">Deliver to:</label>
+              <select id="destinationSelect">
+                <option value="" disabled selected>
+                  Loading destinations...
+                </option>
+              </select>
+            </div>
+          </div>
+
           <div class="menu-grid">
             <div class="menu-item">
               <img
@@ -633,7 +686,37 @@
       </div>
     </div>
 
+    <!-- Empty order modal -->
+    <div
+      id="emptyOrderModal"
+      class="modal-backdrop"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="emptyOrderModalTitle"
+    >
+      <div class="modal-dialog">
+        <div class="modal-title" id="emptyOrderModalTitle">
+          No items in order
+        </div>
+        <div class="modal-subtitle">
+          Please add at least one item to your order before completing it.
+        </div>
+        <div class="modal-footer">
+          <button
+            id="emptyOrderModalOkBtn"
+            class="btn btn-primary"
+            type="button"
+          >
+            OK
+          </button>
+        </div>
+      </div>
+    </div>
+
     <script>
+      const WEBHOOK_BASE =
+        "https://hook.eu2.make.com/0xtcwsksn1bow2q6ujlq8shej4w6va8y";
+
       // Store order items with their options
       // Each item: { name: "Cappuccino", options: { shot: "double", milk: "regular" }, ... }
       let currentOrderItems = [];
@@ -642,6 +725,12 @@
       let currentItemBeingConfigured = null;
 
       const orderItemsList = document.getElementById("orderItemsList");
+      const recipientSelect = document.getElementById("recipientSelect");
+      const destinationSelect = document.getElementById("destinationSelect");
+      const emptyOrderModal = document.getElementById("emptyOrderModal");
+      const emptyOrderModalOkBtn = document.getElementById(
+        "emptyOrderModalOkBtn"
+      );
       const itemCountBadge = document.getElementById("itemCountBadge");
       const completeOrderBtn = document.getElementById("completeOrderBtn");
       const newOrderBtn = document.getElementById("newOrderBtn");
@@ -671,6 +760,42 @@
           openOptionsModal(itemType);
         });
       });
+
+      // Load recipients and destinations from webhook
+      async function loadRecipientsAndDestinations() {
+        try {
+          const response = await fetch(`${WEBHOOK_BASE}?type=getConfigs`);
+          const data = await response.json();
+
+          // Clear existing options
+          recipientSelect.innerHTML =
+            '<option value="" disabled selected>Select recipient...</option>';
+          destinationSelect.innerHTML =
+            '<option value="" disabled selected>Select destination...</option>';
+
+          data.forEach((item) => {
+            const configData = item.data;
+            if (configData["Value-Type"] === "Recipient") {
+              const opt = document.createElement("option");
+              opt.value = item.key;
+              opt.textContent = configData.Description;
+              opt.dataset.mobile = configData.Value.replace(/^\+/, ""); // Store mobile number, remove + if present
+              recipientSelect.appendChild(opt);
+            } else if (configData["Value-Type"] === "Destination") {
+              const opt = document.createElement("option");
+              opt.value = item.key;
+              opt.textContent = configData.Description;
+              destinationSelect.appendChild(opt);
+            }
+          });
+        } catch (error) {
+          console.error("Error loading recipients/destinations:", error);
+          recipientSelect.innerHTML =
+            '<option value="" disabled selected>Error loading recipients</option>';
+          destinationSelect.innerHTML =
+            '<option value="" disabled selected>Error loading destinations</option>';
+        }
+      }
 
       function openOptionsModal(itemType) {
         currentItemBeingConfigured = { type: itemType };
@@ -929,11 +1054,32 @@
         orderModal.classList.remove("show");
       }
 
+      function showEmptyOrderModal() {
+        emptyOrderModal.classList.add("show");
+      }
+
+      function hideEmptyOrderModal() {
+        emptyOrderModal.classList.remove("show");
+      }
+
       function completeOrder() {
         if (currentOrderItems.length === 0) {
-          alert("You have no items in this order yet.");
+          showEmptyOrderModal();
           return;
         }
+
+        // Get selected recipient and destination
+        const selectedRecipientOption =
+          recipientSelect.options[recipientSelect.selectedIndex];
+        const selectedRecipientKey = recipientSelect.value;
+        const selectedDestinationKey = destinationSelect.value;
+        const selectedRecipientName =
+          selectedRecipientOption?.textContent || "";
+        const selectedRecipientMobile =
+          selectedRecipientOption?.dataset.mobile || "";
+        const selectedDestinationName =
+          destinationSelect.options[destinationSelect.selectedIndex]
+            ?.textContent || "";
 
         // Aggregate items by unique combination (name + options)
         const aggregateMap = new Map();
@@ -964,7 +1110,21 @@
           };
         });
 
-        console.log("WhatsApp items:", whatsappItems);
+        // Build order payload with recipient and destination
+        const orderPayload = {
+          items: whatsappItems,
+          recipient: {
+            key: selectedRecipientKey,
+            name: selectedRecipientName,
+            mobile: selectedRecipientMobile,
+          },
+          destination: {
+            key: selectedDestinationKey,
+            name: selectedDestinationName,
+          },
+        };
+
+        console.log("Order payload:", orderPayload);
 
         // POST to Make webhook for WhatsApp delivery
         fetch("https://hook.eu2.make.com/ntio3991uxnmqjwx2tfj8xusgvn5ft5a", {
@@ -972,7 +1132,7 @@
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ items: whatsappItems }),
+          body: JSON.stringify(orderPayload),
         })
           .catch((err) => {
             console.error("Error sending WhatsApp webhook:", err);
@@ -989,11 +1149,19 @@
         hideOrderModal();
         clearOrder();
       });
+      emptyOrderModalOkBtn.addEventListener("click", hideEmptyOrderModal);
+      // Close empty order modal when clicking backdrop
+      emptyOrderModal.addEventListener("click", (e) => {
+        if (e.target === emptyOrderModal) {
+          hideEmptyOrderModal();
+        }
+      });
       optionsModalCancelBtn.addEventListener("click", hideOptionsModal);
       optionsModalConfirmBtn.addEventListener("click", addItemToOrder);
 
       // Initialize UI
       updateOrderListUI();
+      loadRecipientsAndDestinations();
     </script>
   </body>
 </html>
