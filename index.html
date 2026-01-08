@@ -498,7 +498,9 @@
               </select>
             </div>
             <div>
-              <label for="destinationSelect" class="label">Deliver to:</label>
+              <label for="destinationSelect" class="label" id="deliverToLabel"
+                >Deliver to:</label
+              >
               <select id="destinationSelect">
                 <option value="" disabled selected>
                   Loading destinations...
@@ -762,10 +764,18 @@
       });
 
       // Load recipients and destinations from webhook
+      // Store global channel
+      let globalChannel = "whatsapp";
+
       async function loadRecipientsAndDestinations() {
         try {
           const response = await fetch(`${WEBHOOK_BASE}?type=getConfigs`);
-          const data = await response.json();
+          let data = await response.json();
+
+          // Handle wrapped response structure (body array)
+          if (Array.isArray(data) && data.length > 0 && data[0].body) {
+            data = data[0].body;
+          }
 
           // Clear existing options
           recipientSelect.innerHTML =
@@ -773,20 +783,92 @@
           destinationSelect.innerHTML =
             '<option value="" disabled selected>Select destination...</option>';
 
+          if (!Array.isArray(data)) {
+            console.error("Expected array but got:", typeof data, data);
+            data = [];
+          }
+
+          // Group recipients by name to combine mobile and email
+          const recipientMap = new Map();
+
           data.forEach((item) => {
+            if (!item || !item.data) {
+              console.warn("Skipping invalid item:", item);
+              return;
+            }
+
             const configData = item.data;
-            if (configData["Value-Type"] === "Recipient") {
-              const opt = document.createElement("option");
-              opt.value = item.key;
-              opt.textContent = configData.Description;
-              opt.dataset.mobile = configData.Value.replace(/^\+/, ""); // Store mobile number, remove + if present
-              recipientSelect.appendChild(opt);
-            } else if (configData["Value-Type"] === "Destination") {
+            const valueType = configData["Value-Type"];
+
+            // Handle "Recipient", "Recipient-WA", "Recipient-Email" formats
+            if (
+              valueType === "Recipient" ||
+              valueType === "Recipient-WA" ||
+              valueType === "Recipient-Email"
+            ) {
+              const name = configData.Description;
+              if (!name) {
+                console.warn("Skipping recipient with no name:", configData);
+                return;
+              }
+
+              const value = (configData.Value || "").replace(/^\+/, "");
+              const isMobile = /^27\d{9}$/.test(value);
+
+              if (!recipientMap.has(name)) {
+                recipientMap.set(name, {
+                  name: name,
+                  mobile: "",
+                  email: "",
+                  key: item.key || "", // Use first key as identifier
+                });
+              }
+
+              const recipient = recipientMap.get(name);
+              if (isMobile) {
+                // Value is the phone number
+                recipient.mobile = value;
+              }
+
+              // Email is always in the Email field (handle null values)
+              if (configData.Email && configData.Email !== null) {
+                recipient.email = configData.Email;
+              }
+
+              // Update key if not set
+              if (!recipient.key && item.key) {
+                recipient.key = item.key;
+              }
+            } else if (
+              (valueType === null || valueType === undefined) &&
+              configData.Description === "Channel"
+            ) {
+              // Global channel setting
+              const channelValue = (
+                configData.Value || "whatsapp"
+              ).toLowerCase();
+              globalChannel =
+                channelValue === "email" || channelValue === "whatsapp"
+                  ? channelValue
+                  : "whatsapp";
+              updateDeliverToLabel();
+            } else if (valueType === "Destination") {
               const opt = document.createElement("option");
               opt.value = item.key;
               opt.textContent = configData.Description;
               destinationSelect.appendChild(opt);
             }
+          });
+
+          // Create options from grouped recipients
+          recipientMap.forEach((recipient) => {
+            const opt = document.createElement("option");
+            opt.value = recipient.key;
+            opt.textContent = recipient.name;
+            opt.dataset.mobile = recipient.mobile;
+            opt.dataset.email = recipient.email;
+            opt.dataset.channel = recipient.email ? "email" : "whatsapp"; // Default to email if email exists, else whatsapp
+            recipientSelect.appendChild(opt);
           });
         } catch (error) {
           console.error("Error loading recipients/destinations:", error);
@@ -794,6 +876,19 @@
             '<option value="" disabled selected>Error loading recipients</option>';
           destinationSelect.innerHTML =
             '<option value="" disabled selected>Error loading destinations</option>';
+        } finally {
+          // Always update label, even on error (will use default "whatsapp")
+          updateDeliverToLabel();
+        }
+      }
+
+      // Update "Deliver to" label with channel
+      function updateDeliverToLabel() {
+        const deliverToLabel = document.getElementById("deliverToLabel");
+        if (deliverToLabel) {
+          const channelDisplay =
+            globalChannel === "email" ? "Email" : "WhatsApp";
+          deliverToLabel.textContent = `Deliver to (via ${channelDisplay}):`;
         }
       }
 
@@ -1077,9 +1172,20 @@
           selectedRecipientOption?.textContent || "";
         const selectedRecipientMobile =
           selectedRecipientOption?.dataset.mobile || "";
+        const selectedRecipientEmail =
+          selectedRecipientOption?.dataset.email || "";
         const selectedDestinationName =
           destinationSelect.options[destinationSelect.selectedIndex]
             ?.textContent || "";
+
+        // Use global channel setting
+        const channel = globalChannel;
+
+        // Determine destination address based on channel
+        const destinationAddress =
+          channel === "email"
+            ? selectedRecipientEmail
+            : selectedRecipientMobile;
 
         // Aggregate items by unique combination (name + options)
         const aggregateMap = new Map();
@@ -1117,7 +1223,10 @@
             key: selectedRecipientKey,
             name: selectedRecipientName,
             mobile: selectedRecipientMobile,
+            email: selectedRecipientEmail,
           },
+          channel: channel,
+          destinationAddress: destinationAddress,
           destination: {
             key: selectedDestinationKey,
             name: selectedDestinationName,

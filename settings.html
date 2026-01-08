@@ -283,7 +283,9 @@
       }
 
       input[type="text"],
-      input[type="tel"] {
+      input[type="tel"],
+      input[type="email"],
+      select {
         width: 100%;
         padding: 12px 14px;
         border-radius: 10px;
@@ -296,7 +298,9 @@
       }
 
       input[type="text"]:focus,
-      input[type="tel"]:focus {
+      input[type="tel"]:focus,
+      input[type="email"]:focus,
+      select:focus {
         border-color: #c62d2e;
         box-shadow: 0 0 0 2px rgba(198, 45, 46, 0.15);
       }
@@ -427,7 +431,15 @@
         <div class="section">
           <div class="section-title">Recipients</div>
           <div class="section-subtitle">
-            Manage who receives order notifications via WhatsApp
+            Manage who receives order notifications
+          </div>
+
+          <div class="form-group" style="margin-bottom: 20px">
+            <label for="globalRecipientChannel" class="label">Send via:</label>
+            <select id="globalRecipientChannel">
+              <option value="whatsapp">WhatsApp</option>
+              <option value="email">Email</option>
+            </select>
           </div>
 
           <div id="recipientsList" class="list-container">
@@ -454,7 +466,9 @@
               />
             </div>
             <div class="form-group">
-              <label for="recipientMobile" class="label">Mobile Number</label>
+              <label for="recipientMobile" class="label"
+                >Mobile Number (optional)</label
+              >
               <input
                 type="tel"
                 id="recipientMobile"
@@ -464,6 +478,20 @@
               <div class="error-message" id="recipientMobileError">
                 Mobile number must be 11 digits starting with 27 (e.g.,
                 27823914526)
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="recipientEmail" class="label">Email (optional)</label>
+              <input
+                type="email"
+                id="recipientEmail"
+                placeholder="recipient@example.com"
+              />
+              <div class="error-message" id="recipientEmailError">
+                Please enter a valid email address
+              </div>
+              <div style="font-size: 12px; color: #666; margin-top: 4px">
+                At least one of Mobile Number or Email is required
               </div>
             </div>
             <div class="form-group">
@@ -551,6 +579,8 @@
 
       let recipients = [];
       let destinations = [];
+      let globalChannelKey = ""; // Track global channel key
+      let originalChannelValue = "whatsapp"; // Track original channel value to detect changes
       let editingRecipientKey = null;
       let editingDestinationKey = null;
       let isSaving = false; // Prevent duplicate webhook calls
@@ -574,6 +604,13 @@
       const recipientMobileInput = document.getElementById("recipientMobile");
       const recipientMobileError = document.getElementById(
         "recipientMobileError"
+      );
+      const recipientEmailInput = document.getElementById("recipientEmail");
+      const recipientEmailError = document.getElementById(
+        "recipientEmailError"
+      );
+      const globalRecipientChannel = document.getElementById(
+        "globalRecipientChannel"
       );
       const destinationNameInput = document.getElementById("destinationName");
       const deleteModal = document.getElementById("deleteModal");
@@ -615,7 +652,7 @@
         const { type, key } = pendingDelete;
 
         if (type === "recipient") {
-          const index = recipients.findIndex((r) => r.key === key);
+          const index = recipients.findIndex((r) => r.name === key);
           if (index !== -1) {
             const recipient = recipients[index];
             if (recipient.action === "create") {
@@ -682,22 +719,115 @@
         try {
           const response = await fetch(`${WEBHOOK_BASE}?type=getConfigs`);
           console.log("Webhook response status:", response.status);
-          const data = await response.json();
+
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+
+          let data = await response.json();
           console.log("Webhook response data:", data);
+
+          if (!data) {
+            throw new Error("No data received from webhook");
+          }
+
+          // Handle wrapped response structure (body array)
+          if (Array.isArray(data) && data.length > 0 && data[0].body) {
+            data = data[0].body;
+          }
 
           recipients = [];
           destinations = [];
+          globalChannelKey = ""; // Reset global channel key
+          originalChannelValue = "whatsapp"; // Reset original channel value
+
+          // Group items by recipient name to combine mobile and email
+          const recipientMap = new Map();
+
+          if (!Array.isArray(data)) {
+            console.error("Expected array but got:", typeof data, data);
+            data = [];
+          }
 
           data.forEach((item) => {
+            if (!item || !item.data) {
+              console.warn("Skipping invalid item:", item);
+              return;
+            }
+
             const configData = item.data;
-            if (configData["Value-Type"] === "Recipient") {
-              recipients.push({
-                key: item.key,
-                name: configData.Description,
-                mobile: configData.Value.replace(/^\+/, ""), // Remove + if present
-                action: null, // Existing item, no action yet
-              });
-            } else if (configData["Value-Type"] === "Destination") {
+            const valueType = configData["Value-Type"];
+
+            // Handle "Recipient", "Recipient-WA", "Recipient-Email" formats
+            if (
+              valueType === "Recipient" ||
+              valueType === "Recipient-WA" ||
+              valueType === "Recipient-Email"
+            ) {
+              const name = configData.Description;
+              if (!name) {
+                console.warn("Skipping recipient with no name:", configData);
+                return;
+              }
+
+              const value = (configData.Value || "").replace(/^\+/, "");
+
+              // Check if this is a mobile number (starts with 27) or email
+              const isMobile = /^27\d{9}$/.test(value);
+
+              if (!recipientMap.has(name)) {
+                recipientMap.set(name, {
+                  name: name,
+                  mobile: "",
+                  email: "",
+                  mobileKey: "",
+                  emailKey: "",
+                  action: null,
+                });
+              }
+
+              const recipient = recipientMap.get(name);
+
+              // Value should be the phone number, Email field contains the email
+              if (isMobile || /^27\d{9}$/.test(value)) {
+                // Value is the phone number
+                recipient.mobile = value;
+                recipient.mobileKey = item.key || "";
+              }
+
+              // Email is in the Email field (handle null values)
+              if (configData.Email && configData.Email !== null) {
+                recipient.email = configData.Email;
+                recipient.emailKey = item.key || "";
+              }
+            } else if (
+              (valueType === null || valueType === undefined) &&
+              configData.Description === "Channel"
+            ) {
+              // Global channel setting - separate from recipients
+              const rawValue = configData.Value || "whatsapp";
+              const channelValue = String(rawValue).toLowerCase();
+              console.log(
+                `Found Channel item - Raw Value: "${rawValue}", normalized: "${channelValue}", key: ${item.key}`
+              );
+
+              if (globalRecipientChannel) {
+                // Ensure the value matches one of the dropdown options
+                const validValue =
+                  channelValue === "email" || channelValue === "whatsapp"
+                    ? channelValue
+                    : "whatsapp";
+
+                globalRecipientChannel.value = validValue;
+                originalChannelValue = validValue; // Track original value
+                globalChannelKey = item.key || "";
+                console.log(
+                  `Global channel set to: "${validValue}", key: ${globalChannelKey}`
+                );
+              } else {
+                console.error("globalRecipientChannel element not found!");
+              }
+            } else if (valueType === "Destination") {
               destinations.push({
                 key: item.key,
                 name: configData.Description,
@@ -706,12 +836,45 @@
             }
           });
 
+          // Convert map to array
+          recipients = Array.from(recipientMap.values());
+          console.log("Processed recipients:", recipients);
+          console.log("Processed destinations:", destinations);
+
+          // Global channel is set from the Channel item above
+          // If no channel item was found, default to whatsapp
+          if (!globalChannelKey) {
+            console.log("No channel item found, defaulting to whatsapp");
+            if (globalRecipientChannel) {
+              globalRecipientChannel.value = "whatsapp";
+              originalChannelValue = "whatsapp";
+            }
+          } else {
+            console.log(
+              `Channel loaded - current value: ${globalRecipientChannel.value}, original: ${originalChannelValue}, key: ${globalChannelKey}`
+            );
+          }
+
+          console.log("About to render recipients and destinations...");
           renderRecipients();
           renderDestinations();
-          console.log("Configs loaded successfully");
+          console.log("Configs loaded successfully", {
+            recipients: recipients.length,
+            destinations: destinations.length,
+            channel: globalRecipientChannel
+              ? globalRecipientChannel.value
+              : "not found",
+          });
         } catch (error) {
           console.error("Error loading configs:", error);
           console.error("Error details:", error.message, error.stack);
+
+          // Ensure we render empty lists even on error so page doesn't get stuck
+          recipients = [];
+          destinations = [];
+          renderRecipients();
+          renderDestinations();
+
           showStatus(
             `Error loading configuration: ${error.message}. Please refresh the page.`,
             "error"
@@ -725,8 +888,22 @@
         return /^27\d{9}$/.test(cleaned) && cleaned.length === 11;
       }
 
+      // Validate email address
+      function validateEmail(email) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return emailRegex.test(email);
+      }
+
       // Render recipients list
       function renderRecipients() {
+        console.log(
+          "renderRecipients called, recipients.length:",
+          recipients.length
+        );
+        if (!recipientsList) {
+          console.error("recipientsList element not found!");
+          return;
+        }
         if (recipients.length === 0) {
           recipientsList.innerHTML =
             '<div class="empty-state">No recipients yet. Click "Add Recipient" to add one.</div>';
@@ -735,52 +912,63 @@
 
         recipientsList.innerHTML = recipients
           .map((recipient) => {
-            const isEditing = editingRecipientKey === recipient.key;
+            const recipientId = recipient.name; // Use name as identifier
+            const isEditing = editingRecipientKey === recipientId;
             const isDeleted = recipient.action === "delete";
             const editingClass = isEditing ? "editing" : "";
             const deletedClass = isDeleted ? "deleted" : "";
             return `
-          <div class="list-item ${editingClass} ${deletedClass}" data-key="${
-              recipient.key || ""
-            }">
+          <div class="list-item ${editingClass} ${deletedClass}" data-key="${escapeHtml(
+              recipientId
+            )}">
             <div class="list-item-content">
               <div class="list-item-name">${escapeHtml(recipient.name)}</div>
-              <div class="list-item-detail">${escapeHtml(
-                recipient.mobile
-              )}</div>
+              <div class="list-item-detail">
+                ${escapeHtml(recipient.mobile)} • ${escapeHtml(
+              recipient.email || "No email"
+            )}
+              </div>
               ${
                 isEditing
                   ? `
-              <input type="text" class="list-item-input" id="edit-recipient-name-${
-                recipient.key
-              }" value="${escapeHtml(recipient.name)}" placeholder="Name">
-              <input type="tel" class="list-item-input" id="edit-recipient-mobile-${
-                recipient.key
-              }" value="${escapeHtml(
+              <input type="text" class="list-item-input" id="edit-recipient-name-${escapeHtml(
+                recipientId
+              )}" value="${escapeHtml(recipient.name)}" placeholder="Name">
+              <input type="tel" class="list-item-input" id="edit-recipient-mobile-${escapeHtml(
+                recipientId
+              )}" value="${escapeHtml(
                       recipient.mobile
                     )}" placeholder="27823914526" maxlength="11">
-              <div class="error-message" id="edit-recipient-error-${
-                recipient.key
-              }" style="display: none; font-size: 11px; margin-top: -4px;">Mobile must be 11 digits starting with 27</div>
+              <div class="error-message" id="edit-recipient-error-${escapeHtml(
+                recipientId
+              )}" style="display: none; font-size: 11px; margin-top: -4px;">Mobile must be 11 digits starting with 27</div>
+              <input type="email" class="list-item-input" id="edit-recipient-email-${escapeHtml(
+                recipientId
+              )}" value="${escapeHtml(
+                      recipient.email || ""
+                    )}" placeholder="email@example.com">
+              <div class="error-message" id="edit-recipient-email-error-${escapeHtml(
+                recipientId
+              )}" style="display: none; font-size: 11px; margin-top: -4px;">Please enter a valid email address</div>
               `
                   : ""
               }
               <div class="list-item-edit-actions">
-                <button class="btn btn-primary btn-small" onclick="saveInlineRecipient('${
-                  recipient.key
-                }')">Save</button>
-                <button class="btn btn-secondary btn-small" onclick="cancelInlineRecipient('${
-                  recipient.key
-                }')">Cancel</button>
+                <button class="btn btn-primary btn-small" onclick="saveInlineRecipient('${escapeHtml(
+                  recipientId
+                )}')">Save</button>
+                <button class="btn btn-secondary btn-small" onclick="cancelInlineRecipient('${escapeHtml(
+                  recipientId
+                )}')">Cancel</button>
               </div>
             </div>
             <div class="list-item-actions">
-              <button class="btn btn-secondary btn-small" onclick="editRecipient('${
-                recipient.key
-              }')">Edit</button>
-              <button class="btn btn-danger btn-small" onclick="deleteRecipient('${
-                recipient.key
-              }')">Delete</button>
+              <button class="btn btn-secondary btn-small" onclick="editRecipient('${escapeHtml(
+                recipientId
+              )}')">Edit</button>
+              <button class="btn btn-danger btn-small" onclick="deleteRecipient('${escapeHtml(
+                recipientId
+              )}')">Delete</button>
             </div>
           </div>
         `;
@@ -800,6 +988,24 @@
                 `edit-recipient-error-${editingRecipientKey}`
               );
               if (value && !validateMobile(value)) {
+                errorDiv.style.display = "block";
+                e.target.classList.add("error");
+              } else {
+                errorDiv.style.display = "none";
+                e.target.classList.remove("error");
+              }
+            });
+          }
+          const emailInput = document.getElementById(
+            `edit-recipient-email-${editingRecipientKey}`
+          );
+          if (emailInput) {
+            emailInput.addEventListener("input", (e) => {
+              const value = e.target.value.trim();
+              const errorDiv = document.getElementById(
+                `edit-recipient-email-error-${editingRecipientKey}`
+              );
+              if (value && !validateEmail(value)) {
                 errorDiv.style.display = "block";
                 e.target.classList.add("error");
               } else {
@@ -886,7 +1092,9 @@
         editingRecipientKey = null;
         recipientNameInput.value = "";
         recipientMobileInput.value = "";
+        recipientEmailInput.value = "";
         recipientMobileError.classList.remove("show");
+        recipientEmailError.classList.remove("show");
         recipientForm.style.display = "block";
         recipientNameInput.focus();
       });
@@ -897,43 +1105,77 @@
         editingRecipientKey = null;
         recipientNameInput.value = "";
         recipientMobileInput.value = "";
+        recipientEmailInput.value = "";
         recipientMobileError.classList.remove("show");
+        recipientEmailError.classList.remove("show");
       });
 
       // Save recipient
       saveRecipientBtn.addEventListener("click", () => {
         const name = recipientNameInput.value.trim();
         const mobile = recipientMobileInput.value.trim().replace(/\D/g, "");
+        const email = recipientEmailInput.value.trim();
+        const channel = globalRecipientChannel.value;
 
         if (!name) {
           showStatus("Please enter a recipient name.", "error");
           return;
         }
 
-        if (!validateMobile(mobile)) {
+        // Either mobile OR email is required (not both)
+        const hasMobile = mobile && validateMobile(mobile);
+        const hasEmail = email && validateEmail(email);
+
+        if (!hasMobile && !hasEmail) {
+          showStatus(
+            "Please enter either a mobile number or an email address.",
+            "error"
+          );
+          if (mobile) {
+            recipientMobileError.classList.add("show");
+          }
+          if (email) {
+            recipientEmailError.classList.add("show");
+          }
+          return;
+        }
+
+        // Validate mobile if provided
+        if (mobile && !validateMobile(mobile)) {
           recipientMobileError.classList.add("show");
           return;
         }
 
+        // Validate email if provided
+        if (email && !validateEmail(email)) {
+          recipientEmailError.classList.add("show");
+          return;
+        }
+
         recipientMobileError.classList.remove("show");
+        recipientEmailError.classList.remove("show");
 
         if (editingRecipientKey) {
-          // Update existing
+          // Update existing - find by name
           const recipient = recipients.find(
-            (r) => r.key === editingRecipientKey
+            (r) => r.name === editingRecipientKey
           );
           if (recipient) {
             recipient.name = name;
             recipient.mobile = mobile;
+            recipient.email = email;
+            // Simple update logic - if has keys, it's an update
             recipient.action =
-              recipient.action === "create" ? "create" : "update";
+              recipient.mobileKey || recipient.emailKey ? "update" : "create";
           }
         } else {
           // Add new
           recipients.push({
-            key: "",
             name: name,
             mobile: mobile,
+            email: email,
+            mobileKey: "",
+            emailKey: "",
             action: "create",
           });
         }
@@ -943,6 +1185,9 @@
         editingRecipientKey = null;
         recipientNameInput.value = "";
         recipientMobileInput.value = "";
+        recipientEmailInput.value = "";
+        recipientMobileError.classList.remove("show");
+        recipientEmailError.classList.remove("show");
         showStatus(
           "Recipient saved. Don't forget to click 'Save All Changes' to persist.",
           "success"
@@ -950,9 +1195,9 @@
       });
 
       // Edit recipient (inline editing for existing, form for new)
-      window.editRecipient = function (key) {
+      window.editRecipient = function (name) {
         // Cancel any existing inline edits
-        if (editingRecipientKey && editingRecipientKey !== key) {
+        if (editingRecipientKey && editingRecipientKey !== name) {
           editingRecipientKey = null;
         }
         if (editingDestinationKey) {
@@ -960,62 +1205,109 @@
           renderDestinations();
         }
 
-        const recipient = recipients.find((r) => r.key === key);
-        if (recipient && recipient.key) {
+        const recipient = recipients.find((r) => r.name === name);
+        if (recipient && (recipient.mobileKey || recipient.emailKey)) {
           // Existing recipient - use inline editing
-          editingRecipientKey = key;
+          editingRecipientKey = name;
           renderRecipients();
           // Focus on name input after render
           setTimeout(() => {
             const nameInput = document.getElementById(
-              `edit-recipient-name-${key}`
+              `edit-recipient-name-${name}`
             );
             if (nameInput) nameInput.focus();
           }, 50);
         } else if (recipient) {
           // New recipient - use form
-          editingRecipientKey = key;
+          editingRecipientKey = name;
           recipientNameInput.value = recipient.name;
           recipientMobileInput.value = recipient.mobile;
+          recipientEmailInput.value = recipient.email || "";
           recipientMobileError.classList.remove("show");
+          recipientEmailError.classList.remove("show");
           recipientForm.style.display = "block";
           recipientNameInput.focus();
         }
       };
 
       // Save inline recipient edit
-      window.saveInlineRecipient = function (key) {
-        const recipient = recipients.find((r) => r.key === key);
+      window.saveInlineRecipient = function (name) {
+        const recipient = recipients.find((r) => r.name === name);
         if (!recipient) return;
 
-        const nameInput = document.getElementById(`edit-recipient-name-${key}`);
-        const mobileInput = document.getElementById(
-          `edit-recipient-mobile-${key}`
+        const nameInput = document.getElementById(
+          `edit-recipient-name-${name}`
         );
-        const errorDiv = document.getElementById(`edit-recipient-error-${key}`);
+        const mobileInput = document.getElementById(
+          `edit-recipient-mobile-${name}`
+        );
+        const emailInput = document.getElementById(
+          `edit-recipient-email-${name}`
+        );
+        const errorDiv = document.getElementById(
+          `edit-recipient-error-${name}`
+        );
+        const emailErrorDiv = document.getElementById(
+          `edit-recipient-email-error-${name}`
+        );
 
-        if (!nameInput || !mobileInput) return;
+        if (!nameInput || !mobileInput || !emailInput) return;
 
-        const name = nameInput.value.trim();
+        const newName = nameInput.value.trim();
         const mobile = mobileInput.value.trim().replace(/\D/g, "");
+        const email = emailInput.value.trim();
 
-        if (!name) {
+        if (!newName) {
           showStatus("Please enter a recipient name.", "error");
           return;
         }
 
-        if (!validateMobile(mobile)) {
+        // Either mobile OR email is required (not both)
+        const hasMobile = mobile && validateMobile(mobile);
+        const hasEmail = email && validateEmail(email);
+
+        if (!hasMobile && !hasEmail) {
+          showStatus(
+            "Please enter either a mobile number or an email address.",
+            "error"
+          );
+          if (mobile) {
+            errorDiv.style.display = "block";
+            mobileInput.classList.add("error");
+          }
+          if (email) {
+            emailErrorDiv.style.display = "block";
+            emailInput.classList.add("error");
+          }
+          return;
+        }
+
+        // Validate mobile if provided
+        if (mobile && !validateMobile(mobile)) {
           errorDiv.style.display = "block";
           mobileInput.classList.add("error");
           return;
         }
 
-        errorDiv.style.display = "none";
-        mobileInput.classList.remove("error");
+        // Validate email if provided
+        if (email && !validateEmail(email)) {
+          emailErrorDiv.style.display = "block";
+          emailInput.classList.add("error");
+          return;
+        }
 
-        recipient.name = name;
+        errorDiv.style.display = "none";
+        emailErrorDiv.style.display = "none";
+        mobileInput.classList.remove("error");
+        emailInput.classList.remove("error");
+
+        recipient.name = newName;
         recipient.mobile = mobile;
-        recipient.action = recipient.action === "create" ? "create" : "update";
+        recipient.email = email;
+
+        // Simple create/update logic - if has keys, it's an update
+        recipient.action =
+          recipient.mobileKey || recipient.emailKey ? "update" : "create";
 
         editingRecipientKey = null;
         renderRecipients();
@@ -1026,16 +1318,16 @@
       };
 
       // Cancel inline recipient edit
-      window.cancelInlineRecipient = function (key) {
+      window.cancelInlineRecipient = function (name) {
         editingRecipientKey = null;
         renderRecipients();
       };
 
       // Delete recipient
-      window.deleteRecipient = function (key) {
-        const recipient = recipients.find((r) => r.key === key);
+      window.deleteRecipient = function (name) {
+        const recipient = recipients.find((r) => r.name === name);
         if (recipient) {
-          showDeleteModal("recipient", key, recipient.name);
+          showDeleteModal("recipient", name, recipient.name);
         }
       };
 
@@ -1182,15 +1474,32 @@
         // Build payload
         const payload = [];
 
-        // Add recipients
+        // Add recipients - send as single item with phone in Value and email in Email field
         recipients.forEach((recipient) => {
           if (recipient.action) {
-            // Only include items with actions (create, update, delete)
+            console.log(
+              `Processing recipient: ${recipient.name}, action: ${recipient.action}, mobile: ${recipient.mobile}, email: ${recipient.email}`
+            );
+
+            // Ensure at least mobile or email is provided
+            if (!recipient.mobile && !recipient.email) {
+              console.warn(
+                `Skipping recipient ${recipient.name} - no mobile or email provided`
+              );
+              return;
+            }
+
+            // Send single item with phone in Value and email in Email field
+            // Use mobileKey as the primary key (or emailKey if mobileKey doesn't exist)
+            const recipientKey =
+              recipient.mobileKey || recipient.emailKey || "";
+
             payload.push({
-              key: recipient.key || "",
+              key: recipientKey,
               data: {
                 Description: recipient.name,
-                Value: recipient.mobile,
+                Value: recipient.mobile || "",
+                Email: recipient.email || "",
                 "Value-Type": "Recipient",
               },
               action: recipient.action,
@@ -1215,6 +1524,24 @@
             });
           }
         });
+
+        // Add global channel if it has changed or if there are other changes
+        const channelValue = globalRecipientChannel.value;
+        const channelChanged = channelValue !== originalChannelValue;
+
+        if (channelChanged || payload.length > 0) {
+          // Send channel if it changed or if there are other changes
+          payload.push({
+            key: globalChannelKey || "",
+            data: {
+              Description: "Channel",
+              Value: channelValue,
+              "Value-Type": null,
+            },
+            action: globalChannelKey ? "update" : "create",
+            type: "updateConfigs",
+          });
+        }
 
         if (payload.length === 0) {
           showStatus("No changes to save.", "error");
@@ -1242,7 +1569,16 @@
           });
 
           if (response.ok) {
-            const responseData = await response.json();
+            let responseData = await response.json();
+
+            // Handle wrapped response structure (body array)
+            if (
+              Array.isArray(responseData) &&
+              responseData.length > 0 &&
+              responseData[0].body
+            ) {
+              responseData = responseData[0].body;
+            }
 
             // Update local arrays with keys from webhook response
             if (Array.isArray(responseData)) {
@@ -1269,27 +1605,57 @@
                 const valueType = configData["Value-Type"];
 
                 if (valueType === "Recipient") {
-                  // Find matching recipient by key (for updates) or by name+mobile (for creates)
+                  // Find matching recipient by name
+                  const value = configData.Value.replace(/^\+/, "");
+                  const isMobile = /^27\d{9}$/.test(value);
+
                   let recipient = recipients.find(
-                    (r) => r.key && r.key === item.key
+                    (r) => r.name === configData.Description
                   );
 
                   if (!recipient) {
-                    // New item - find by name and mobile
-                    recipient = recipients.find(
-                      (r) =>
-                        !r.key &&
-                        r.name === configData.Description &&
-                        r.mobile === configData.Value.replace(/^\+/, "")
-                    );
+                    // New recipient - create it
+                    recipient = {
+                      name: configData.Description,
+                      mobile: "",
+                      email: "",
+                      mobileKey: "",
+                      emailKey: "",
+                      channelKey: "",
+                      channel: "whatsapp",
+                      action: null,
+                    };
+                    recipients.push(recipient);
                   }
 
-                  if (recipient) {
-                    recipient.key = item.key;
-                    recipient.name = configData.Description;
-                    recipient.mobile = configData.Value.replace(/^\+/, "");
-                    recipient.action = null; // Clear action since it's saved
+                  // Update the appropriate field based on whether it's mobile or email
+                  if (isMobile) {
+                    recipient.mobile = value;
+                    recipient.mobileKey = item.key;
+                  } else {
+                    recipient.email = value;
+                    recipient.emailKey = item.key;
                   }
+
+                  // Also check Email field (handle null values)
+                  if (configData.Email && configData.Email !== null) {
+                    recipient.email = configData.Email;
+                    recipient.emailKey = item.key;
+                  }
+
+                  recipient.action = null; // Clear action since it's saved
+                } else if (
+                  valueType === null &&
+                  configData.Description === "Channel"
+                ) {
+                  // Global channel item - separate from recipients
+                  const channelValue = (
+                    configData.Value || "whatsapp"
+                  ).toLowerCase();
+                  globalRecipientChannel.value = channelValue;
+                  originalChannelValue = channelValue; // Update original value after save
+                  globalChannelKey = item.key;
+                  console.log(`Global channel updated to: ${channelValue}`);
                 } else if (valueType === "Destination") {
                   // Find matching destination by key (for updates) or by name (for creates)
                   let destination = destinations.find(
@@ -1344,6 +1710,12 @@
       // Load configs on page load and set up delete modal listeners
       function initializePage() {
         setupDeleteModalListeners();
+        // Render empty lists immediately so page doesn't show "Loading..."
+        recipients = [];
+        destinations = [];
+        renderRecipients();
+        renderDestinations();
+        // Then load configs
         loadConfigs();
       }
 
