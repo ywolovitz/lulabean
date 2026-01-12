@@ -759,7 +759,17 @@
       menuButtons.forEach((btn) => {
         btn.addEventListener("click", () => {
           const itemType = btn.getAttribute("data-item");
-          openOptionsModal(itemType);
+          // Water items don't need options, add directly to order
+          if (itemType === "stillwater" || itemType === "sparklingwater") {
+            const item = {
+              name: itemType === "stillwater" ? "Still Water" : "Sparkling Water",
+              options: {},
+            };
+            currentOrderItems.push(item);
+            updateOrderListUI();
+          } else {
+            openOptionsModal(itemType);
+          }
         });
       });
 
@@ -888,7 +898,7 @@
         if (deliverToLabel) {
           const channelDisplay =
             globalChannel === "email" ? "Email" : "WhatsApp";
-          deliverToLabel.textContent = `Deliver to (via ${channelDisplay}):`;
+          deliverToLabel.textContent = `Deliver to:`;
         }
       }
 
@@ -934,7 +944,7 @@
           milkGroup.innerHTML = '<label class="modal-label">Milk</label>';
           const milkOptions = document.createElement("div");
           milkOptions.className = "modal-options";
-          ["low fat", "regular", "soya"].forEach((milk) => {
+          ["low fat", "regular"].forEach((milk) => {
             const btn = document.createElement("button");
             btn.type = "button";
             btn.className = "modal-option-btn";
@@ -984,38 +994,6 @@
           });
           shotGroup.appendChild(shotOptions);
           optionsModalContent.appendChild(shotGroup);
-        } else if (itemType === "stillwater" || itemType === "sparklingwater") {
-          const itemName =
-            itemType === "stillwater" ? "Still Water" : "Sparkling Water";
-          optionsModalTitle.textContent = `${itemName} Options`;
-          optionsModalSubtitle.textContent = "Select temperature";
-
-          const tempGroup = document.createElement("div");
-          tempGroup.className = "modal-form-group";
-          tempGroup.innerHTML =
-            '<label class="modal-label">Temperature</label>';
-          const tempOptions = document.createElement("div");
-          tempOptions.className = "modal-options";
-          ["Fridge", "Room temp"].forEach((temp) => {
-            const btn = document.createElement("button");
-            btn.type = "button";
-            btn.className = "modal-option-btn";
-            btn.textContent = temp;
-            btn.dataset.value = temp.toLowerCase().replace(" ", "");
-            btn.addEventListener("click", () => {
-              document
-                .querySelectorAll(".modal-options button")
-                .forEach((b) => {
-                  if (b.parentElement === tempOptions)
-                    b.classList.remove("selected");
-                });
-              btn.classList.add("selected");
-              currentItemBeingConfigured.temperature = temp;
-            });
-            tempOptions.appendChild(btn);
-          });
-          tempGroup.appendChild(tempOptions);
-          optionsModalContent.appendChild(tempGroup);
         }
 
         optionsModal.classList.add("show");
@@ -1038,13 +1016,6 @@
         }
         if (type === "espresso" && !options.shot) {
           alert("Please select a shot option.");
-          return;
-        }
-        if (
-          (type === "stillwater" || type === "sparklingwater") &&
-          !options.temperature
-        ) {
-          alert("Please select a temperature option.");
           return;
         }
 
