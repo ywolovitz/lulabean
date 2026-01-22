@@ -574,6 +574,27 @@
 
             <div class="menu-item">
               <img
+                src="assets/decaf.png"
+                alt="Decaf Coffee"
+                class="menu-item-image"
+              />
+              <div class="menu-item-content">
+                <div class="menu-item-name">Decaf Coffee</div>
+                <div class="menu-item-category">Coffee</div>
+              </div>
+              <div class="menu-item-button">
+                <button
+                  class="btn btn-secondary"
+                  type="button"
+                  data-item="decaf"
+                >
+                  Add to Order
+                </button>
+              </div>
+            </div>
+
+            <div class="menu-item">
+              <img
                 src="assets/espresso.jpg"
                 alt="Espresso"
                 class="menu-item-image"
@@ -995,8 +1016,11 @@
         currentItemBeingConfigured = { type: itemType };
         optionsModalContent.innerHTML = "";
 
-        if (itemType === "cappuccino") {
-          optionsModalTitle.textContent = "Cappuccino Options";
+        if (itemType === "cappuccino" || itemType === "decaf") {
+          const isDecaf = itemType === "decaf";
+          optionsModalTitle.textContent = isDecaf
+            ? "Decaf Coffee Options"
+            : "Cappuccino Options";
           optionsModalSubtitle.textContent = "Select your preferences";
 
           // Shot selection
@@ -1033,7 +1057,7 @@
           milkGroup.innerHTML = '<label class="modal-label">Milk</label>';
           const milkOptions = document.createElement("div");
           milkOptions.className = "modal-options";
-          ["low fat", "regular"].forEach((milk) => {
+          ["low fat", "regular", "cappaccino", "no milk"].forEach((milk) => {
             const btn = document.createElement("button");
             btn.type = "button";
             btn.className = "modal-option-btn";
@@ -1099,7 +1123,10 @@
         const { type, ...options } = currentItemBeingConfigured;
 
         // Validate required options
-        if (type === "cappuccino" && (!options.shot || !options.milk)) {
+        if (
+          (type === "cappuccino" || type === "decaf") &&
+          (!options.shot || !options.milk)
+        ) {
           alert("Please select both shot and milk options.");
           return;
         }
@@ -1113,6 +1140,8 @@
           name:
             type === "cappuccino"
               ? "Cappuccino"
+              : type === "decaf"
+              ? "Decaf Coffee"
               : type === "espresso"
               ? "Espresso"
               : type === "stillwater"
