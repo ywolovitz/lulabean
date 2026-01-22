@@ -396,6 +396,17 @@
         margin-bottom: 16px;
       }
 
+      .modal-form-group select {
+        width: 100%;
+        padding: 10px 12px;
+        border-radius: 8px;
+        border: 1px solid #d8d8d8;
+        font-size: 14px;
+        background: #ffffff;
+        outline: none;
+        font-family: "Barlow", sans-serif;
+      }
+
       .modal-label {
         font-size: 13px;
         font-weight: 600;
@@ -458,6 +469,36 @@
 
       .modal-order-lines li + li {
         margin-top: 4px;
+      }
+
+      /* Floating broom action */
+      .fab-broom {
+        position: fixed;
+        right: 28px;
+        bottom: 28px;
+        width: 58px;
+        height: 58px;
+        border-radius: 50%;
+        border: none;
+        background: #c62d2e;
+        color: #ffffff;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 16px 28px rgba(198, 45, 46, 0.35);
+        cursor: pointer;
+        z-index: 45;
+      }
+
+      .fab-broom:active {
+        transform: translateY(1px);
+        box-shadow: 0 10px 20px rgba(198, 45, 46, 0.35);
+      }
+
+      .fab-broom img {
+        width: 28px;
+        height: 28px;
+        display: block;
       }
     </style>
   </head>
@@ -632,6 +673,10 @@
       </div>
     </div>
 
+    <button id="broomFab" class="fab-broom" type="button" aria-label="Send to">
+      <img src="assets/broom.svg" alt="" aria-hidden="true" />
+    </button>
+
     <!-- Options modal (for Cappuccino, Espresso, Waters) -->
     <div
       id="optionsModal"
@@ -715,9 +760,43 @@
       </div>
     </div>
 
+    <!-- Send to modal -->
+    <div
+      id="sendToModal"
+      class="modal-backdrop"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="sendToModalTitle"
+    >
+      <div class="modal-dialog">
+        <div class="modal-title" id="sendToModalTitle">Send to</div>
+        <div class="modal-subtitle">
+          Choose the recipient and location, then confirm.
+        </div>
+        <div class="modal-form-group">
+          <label class="modal-label" for="sendToRecipientSelect">Send to</label>
+          <select id="sendToRecipientSelect"></select>
+        </div>
+        <div class="modal-form-group">
+          <label class="modal-label" for="sendToDestinationSelect">Location</label>
+          <select id="sendToDestinationSelect"></select>
+        </div>
+        <div class="modal-footer">
+          <button id="sendToCancelBtn" class="btn btn-ghost" type="button">
+            Cancel
+          </button>
+          <button id="sendToOkBtn" class="btn btn-primary" type="button">
+            OK
+          </button>
+        </div>
+      </div>
+    </div>
+
     <script>
       const WEBHOOK_BASE =
         "https://hook.eu2.make.com/0xtcwsksn1bow2q6ujlq8shej4w6va8y";
+      const ORDER_WEBHOOK_URL =
+        "https://hook.eu2.make.com/ntio3991uxnmqjwx2tfj8xusgvn5ft5a";
 
       // Store order items with their options
       // Each item: { name: "Cappuccino", options: { shot: "double", milk: "regular" }, ... }
@@ -753,6 +832,16 @@
       const optionsModalConfirmBtn = document.getElementById(
         "optionsModalConfirmBtn"
       );
+      const broomFab = document.getElementById("broomFab");
+      const sendToModal = document.getElementById("sendToModal");
+      const sendToRecipientSelect = document.getElementById(
+        "sendToRecipientSelect"
+      );
+      const sendToDestinationSelect = document.getElementById(
+        "sendToDestinationSelect"
+      );
+      const sendToCancelBtn = document.getElementById("sendToCancelBtn");
+      const sendToOkBtn = document.getElementById("sendToOkBtn");
 
       // Menu item buttons
       const menuButtons = document.querySelectorAll("[data-item]");
@@ -1128,6 +1217,51 @@
         emptyOrderModal.classList.remove("show");
       }
 
+      function openSendToModal() {
+        sendToRecipientSelect.innerHTML = recipientSelect.innerHTML;
+        sendToDestinationSelect.innerHTML = destinationSelect.innerHTML;
+        sendToRecipientSelect.value = recipientSelect.value;
+        sendToDestinationSelect.value = destinationSelect.value;
+        sendToModal.classList.add("show");
+      }
+
+      function hideSendToModal() {
+        sendToModal.classList.remove("show");
+      }
+
+      function confirmSendTo() {
+        const recipientOption =
+          sendToRecipientSelect.options[sendToRecipientSelect.selectedIndex];
+        const destinationOption =
+          sendToDestinationSelect.options[
+            sendToDestinationSelect.selectedIndex
+          ];
+
+        const payload = {
+          recipient: {
+            key: sendToRecipientSelect.value,
+            name: recipientOption?.textContent || "",
+            mobile: recipientOption?.dataset.mobile || "",
+            email: recipientOption?.dataset.email || "",
+          },
+          destination: {
+            key: sendToDestinationSelect.value,
+            name: destinationOption?.textContent || "",
+          },
+          clean: 1,
+        };
+
+        fetch(ORDER_WEBHOOK_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        }).catch((err) => {
+          console.error("Error sending send-to webhook:", err);
+        });
+
+        hideSendToModal();
+      }
+
       function completeOrder() {
         if (currentOrderItems.length === 0) {
           showEmptyOrderModal();
@@ -1202,12 +1336,13 @@
             key: selectedDestinationKey,
             name: selectedDestinationName,
           },
+          clean: 0,
         };
 
         console.log("Order payload:", orderPayload);
 
         // POST to Make webhook for WhatsApp delivery
-        fetch("https://hook.eu2.make.com/ntio3991uxnmqjwx2tfj8xusgvn5ft5a", {
+        fetch(ORDER_WEBHOOK_URL, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -1238,6 +1373,9 @@
       });
       optionsModalCancelBtn.addEventListener("click", hideOptionsModal);
       optionsModalConfirmBtn.addEventListener("click", addItemToOrder);
+      broomFab.addEventListener("click", openSendToModal);
+      sendToCancelBtn.addEventListener("click", hideSendToModal);
+      sendToOkBtn.addEventListener("click", confirmSendTo);
 
       // Initialize UI
       updateOrderListUI();
