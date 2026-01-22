@@ -297,6 +297,12 @@
         border: 1px dashed #d8d8d8;
       }
 
+      .btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        box-shadow: none;
+      }
+
       /* Current order list */
       .current-order {
         margin-top: 10px;
@@ -747,6 +753,9 @@
           <ul id="orderModalLines"></ul>
         </div>
         <div class="modal-footer">
+          <button id="orderModalBackBtn" class="btn btn-ghost" type="button">
+            Go back
+          </button>
           <button id="orderModalOkBtn" class="btn btn-primary" type="button">
             OK
           </button>
@@ -822,6 +831,7 @@
       // Store order items with their options
       // Each item: { name: "Cappuccino", options: { shot: "double", milk: "regular" }, ... }
       let currentOrderItems = [];
+      let isSubmittingOrder = false;
 
       // Current item being configured in the options modal
       let currentItemBeingConfigured = null;
@@ -839,6 +849,7 @@
       const orderModal = document.getElementById("orderModal");
       const orderModalLines = document.getElementById("orderModalLines");
       const orderModalOkBtn = document.getElementById("orderModalOkBtn");
+      const orderModalBackBtn = document.getElementById("orderModalBackBtn");
       const optionsModal = document.getElementById("optionsModal");
       const optionsModalTitle = document.getElementById("optionsModalTitle");
       const optionsModalSubtitle = document.getElementById(
@@ -1200,6 +1211,18 @@
       function clearOrder() {
         currentOrderItems = [];
         updateOrderListUI();
+        setOrderSubmitting(false);
+      }
+
+      function setOrderSubmitting(isSubmitting) {
+        isSubmittingOrder = isSubmitting;
+        completeOrderBtn.disabled = isSubmitting;
+        if (!completeOrderBtn.dataset.defaultText) {
+          completeOrderBtn.dataset.defaultText = completeOrderBtn.textContent;
+        }
+        completeOrderBtn.textContent = isSubmitting
+          ? "Sending..."
+          : completeOrderBtn.dataset.defaultText;
       }
 
       function formatItemForWhatsApp(item) {
@@ -1292,6 +1315,9 @@
       }
 
       function completeOrder() {
+        if (isSubmittingOrder) {
+          return;
+        }
         if (currentOrderItems.length === 0) {
           showEmptyOrderModal();
           return;
@@ -1371,6 +1397,7 @@
         console.log("Order payload:", orderPayload);
 
         // POST to Make webhook for WhatsApp delivery
+        setOrderSubmitting(true);
         fetch(ORDER_WEBHOOK_URL, {
           method: "POST",
           headers: {
@@ -1392,6 +1419,10 @@
       orderModalOkBtn.addEventListener("click", () => {
         hideOrderModal();
         clearOrder();
+      });
+      orderModalBackBtn.addEventListener("click", () => {
+        hideOrderModal();
+        setOrderSubmitting(false);
       });
       emptyOrderModalOkBtn.addEventListener("click", hideEmptyOrderModal);
       // Close empty order modal when clicking backdrop
