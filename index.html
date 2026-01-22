@@ -28,7 +28,8 @@
         justify-content: center;
         align-items: flex-start;
         min-height: 100vh;
-        padding: 24px;
+        padding: 16px;
+        overflow: hidden;
       }
 
       .app-shell {
@@ -40,6 +41,7 @@
         overflow: hidden;
         display: flex;
         flex-direction: column;
+        height: calc(100vh - 32px);
       }
 
       .app-header {
@@ -112,6 +114,8 @@
         display: grid;
         grid-template-columns: 1.3fr 1fr;
         gap: 0;
+        flex: 1;
+        min-height: 0;
       }
 
       @media (max-width: 900px) {
@@ -122,6 +126,9 @@
 
       .panel {
         padding: 24px 28px 28px;
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
       }
 
       .panel + .panel {
@@ -197,6 +204,14 @@
         display: grid;
         gap: 14px;
         margin-bottom: 20px;
+      }
+
+      .menu-scroll {
+        flex: 1;
+        min-height: 0;
+        overflow: auto;
+        padding-right: 6px;
+        margin-bottom: 18px;
       }
 
       .menu-item {
@@ -556,109 +571,111 @@
             </div>
           </div>
 
-          <div class="menu-grid">
-            <div class="menu-item">
-              <img
-                src="assets/cappuccino.jpg"
-                alt="Cappuccino"
-                class="menu-item-image"
-              />
-              <div class="menu-item-content">
-                <div class="menu-item-name">Cappuccino</div>
-                <div class="menu-item-category">Coffee</div>
+          <div class="menu-scroll">
+            <div class="menu-grid">
+              <div class="menu-item">
+                <img
+                  src="assets/cappuccino.jpg"
+                  alt="Cappuccino"
+                  class="menu-item-image"
+                />
+                <div class="menu-item-content">
+                  <div class="menu-item-name">Cappuccino</div>
+                  <div class="menu-item-category">Coffee</div>
+                </div>
+                <div class="menu-item-button">
+                  <button
+                    class="btn btn-secondary"
+                    type="button"
+                    data-item="cappuccino"
+                  >
+                    Add to Order
+                  </button>
+                </div>
               </div>
-              <div class="menu-item-button">
-                <button
-                  class="btn btn-secondary"
-                  type="button"
-                  data-item="cappuccino"
-                >
-                  Add to Order
-                </button>
-              </div>
-            </div>
 
-            <div class="menu-item">
-              <img
-                src="assets/decaf.png"
-                alt="Decaf Coffee"
-                class="menu-item-image"
-              />
-              <div class="menu-item-content">
-                <div class="menu-item-name">Decaf Coffee</div>
-                <div class="menu-item-category">Coffee</div>
+              <div class="menu-item">
+                <img
+                  src="assets/decaf.png"
+                  alt="Decaf Coffee"
+                  class="menu-item-image"
+                />
+                <div class="menu-item-content">
+                  <div class="menu-item-name">Decaf Coffee</div>
+                  <div class="menu-item-category">Coffee</div>
+                </div>
+                <div class="menu-item-button">
+                  <button
+                    class="btn btn-secondary"
+                    type="button"
+                    data-item="decaf"
+                  >
+                    Add to Order
+                  </button>
+                </div>
               </div>
-              <div class="menu-item-button">
-                <button
-                  class="btn btn-secondary"
-                  type="button"
-                  data-item="decaf"
-                >
-                  Add to Order
-                </button>
-              </div>
-            </div>
 
-            <div class="menu-item">
-              <img
-                src="assets/espresso.jpg"
-                alt="Espresso"
-                class="menu-item-image"
-              />
-              <div class="menu-item-content">
-                <div class="menu-item-name">Espresso</div>
-                <div class="menu-item-category">Coffee</div>
+              <div class="menu-item">
+                <img
+                  src="assets/espresso.jpg"
+                  alt="Espresso"
+                  class="menu-item-image"
+                />
+                <div class="menu-item-content">
+                  <div class="menu-item-name">Espresso</div>
+                  <div class="menu-item-category">Coffee</div>
+                </div>
+                <div class="menu-item-button">
+                  <button
+                    class="btn btn-secondary"
+                    type="button"
+                    data-item="espresso"
+                  >
+                    Add to Order
+                  </button>
+                </div>
               </div>
-              <div class="menu-item-button">
-                <button
-                  class="btn btn-secondary"
-                  type="button"
-                  data-item="espresso"
-                >
-                  Add to Order
-                </button>
-              </div>
-            </div>
 
-            <div class="menu-item">
-              <img
-                src="assets/stillwater.jpg"
-                alt="Still Water"
-                class="menu-item-image"
-              />
-              <div class="menu-item-content">
-                <div class="menu-item-name">Still Water</div>
-                <div class="menu-item-category">Water</div>
+              <div class="menu-item">
+                <img
+                  src="assets/stillwater.jpg"
+                  alt="Still Water"
+                  class="menu-item-image"
+                />
+                <div class="menu-item-content">
+                  <div class="menu-item-name">Still Water</div>
+                  <div class="menu-item-category">Water</div>
+                </div>
+                <div class="menu-item-button">
+                  <button
+                    class="btn btn-secondary"
+                    type="button"
+                    data-item="stillwater"
+                  >
+                    Add to Order
+                  </button>
+                </div>
               </div>
-              <div class="menu-item-button">
-                <button
-                  class="btn btn-secondary"
-                  type="button"
-                  data-item="stillwater"
-                >
-                  Add to Order
-                </button>
-              </div>
-            </div>
 
-            <div class="menu-item">
-              <img
-                src="assets/sparklingwater.jpg"
-                alt="Sparkling Water"
-                class="menu-item-image"
-              />
-              <div class="menu-item-content">
-                <div class="menu-item-name">Sparkling Water</div>
-                <div class="menu-item-category">Water</div>
-              </div>
-              <div class="menu-item-button">
-                <button
-                  class="btn btn-secondary"
-                  type="button"
-                  data-item="sparklingwater"
-                >
-                  Add to Order
-                </button>
+              <div class="menu-item">
+                <img
+                  src="assets/sparklingwater.jpg"
+                  alt="Sparkling Water"
+                  class="menu-item-image"
+                />
+                <div class="menu-item-content">
+                  <div class="menu-item-name">Sparkling Water</div>
+                  <div class="menu-item-category">Water</div>
+                </div>
+                <div class="menu-item-button">
+                  <button
+                    class="btn btn-secondary"
+                    type="button"
+                    data-item="sparklingwater"
+                  >
+                    Add to Order
+                  </button>
+                </div>
               </div>
             </div>
           </div>
