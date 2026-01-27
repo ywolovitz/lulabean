@@ -118,6 +118,22 @@
         min-height: 0;
       }
 
+      @media (max-width: 900px) and (orientation: landscape) {
+        body {
+          overflow: auto;
+        }
+
+        .app-shell {
+          height: auto;
+          min-height: calc(100vh - 32px);
+        }
+
+        .app-body {
+          flex: 0 0 auto;
+          min-height: unset;
+        }
+      }
+
       @media (max-width: 900px) {
         .app-body {
           grid-template-columns: 1fr;
